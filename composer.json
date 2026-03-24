@@ -1,0 +1,36 @@
+{
+    "name": "zakobo/laravel-jsonapi-query",
+    "description": "JSON:API query parameter handling for Laravel 13",
+    "type": "library",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.2",
+        "illuminate/database": "^13.0",
+        "illuminate/http": "^13.0",
+        "illuminate/routing": "^13.0",
+        "illuminate/support": "^13.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^11.0",
+        "phpunit/phpunit": "^11.0",
+        "laravel/pint": "^1.29"
+    },
+    "autoload": {
+        "psr-4": {
+            "Zakobo\\JsonApiQuery\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Zakobo\\JsonApiQuery\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Zakobo\\JsonApiQuery\\JsonApiQueryServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable"
+}
