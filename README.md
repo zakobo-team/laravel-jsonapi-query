@@ -17,6 +17,21 @@ In most cases, `toAttributes()` and `toRelationships()` are enough.
 
 ## Installation
 
+Add the repository to your application's `composer.json`:
+
+```json
+{
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/zakobo-team/laravel-jsonapi-query"
+        }
+    ]
+}
+```
+
+Then require the package:
+
 ```bash
 composer require zakobo/laravel-jsonapi-query
 ```

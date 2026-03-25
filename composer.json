@@ -2,7 +2,7 @@
     "name": "zakobo/laravel-jsonapi-query",
     "description": "JSON:API query parameter handling for Laravel 13",
     "type": "library",
-    "license": "proprietary",
+    "license": "MIT",
     "require": {
         "php": "^8.2",
         "illuminate/database": "^13.0",
