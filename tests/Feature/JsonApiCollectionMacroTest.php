@@ -251,6 +251,38 @@ class JsonApiCollectionMacroTest extends TestCase
         $this->assertCount(50, $data['data']);
     }
 
+    #[Test]
+    public function it_uses_configured_default_page_size_when_resource_does_not_define_one(): void
+    {
+        config()->set('jsonapi-query.pagination.default_size', 7);
+
+        for ($i = 1; $i <= 20; $i++) {
+            Post::create(['title' => "Post {$i}", 'slug' => "post-{$i}"]);
+        }
+
+        $request = Request::create('/posts', 'GET');
+
+        $data = $this->jsonApiData(PostConventionalResource::class, $request);
+
+        $this->assertCount(7, $data['data']);
+    }
+
+    #[Test]
+    public function it_caps_page_size_at_configured_max_when_resource_does_not_define_one(): void
+    {
+        config()->set('jsonapi-query.pagination.max_size', 12);
+
+        for ($i = 1; $i <= 20; $i++) {
+            Post::create(['title' => "Post {$i}", 'slug' => "post-{$i}"]);
+        }
+
+        $request = Request::create('/posts', 'GET', ['page' => ['size' => '50']]);
+
+        $data = $this->jsonApiData(PostConventionalResource::class, $request);
+
+        $this->assertCount(12, $data['data']);
+    }
+
     // --- Test 11: excludedFromFilter ---
 
     #[Test]

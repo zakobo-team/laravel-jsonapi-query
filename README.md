@@ -42,6 +42,9 @@ The service provider is auto-discovered. If you want to publish the config:
 php artisan vendor:publish --tag=jsonapi-query-config
 ```
 
+The published config currently exposes global pagination defaults used when a
+resource does not define its own page size limits.
+
 ## Quick Start
 
 ### 1. Define your resource
