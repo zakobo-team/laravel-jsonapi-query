@@ -4,11 +4,24 @@ declare(strict_types=1);
 
 namespace Zakobo\JsonApiQuery\Tests\Fixtures\Resources;
 
+use Illuminate\Http\Request;
 use Zakobo\JsonApiQuery\JsonApiQueryResource;
 
 class CommentResource extends JsonApiQueryResource
 {
-    public $attributes = ['author', 'body'];
+    public function toAttributes(Request $request): array
+    {
+        return [
+            'author',
+            'body',
+            'created_at',
+        ];
+    }
 
-    public $relationships = ['post'];
+    public function toRelationships(Request $request): array
+    {
+        return [
+            'post' => PostResource::class,
+        ];
+    }
 }

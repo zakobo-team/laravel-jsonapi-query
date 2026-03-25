@@ -16,6 +16,11 @@ class JsonApiPaginatorTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function paginator(): JsonApiPaginator
+    {
+        return app(JsonApiPaginator::class);
+    }
+
     #[Test]
     public function it_paginates_with_page_number_and_page_size(): void
     {
@@ -25,7 +30,7 @@ class JsonApiPaginatorTest extends TestCase
 
         $request = Request::create('/posts', 'GET', ['page' => ['number' => '2', 'size' => '10']]);
 
-        $result = JsonApiPaginator::apply(Post::query(), $request, defaultPageSize: 30, maxPageSize: 100);
+        $result = $this->paginator()->paginate(Post::query(), $request, defaultPageSize: 30, maxPageSize: 100);
 
         $this->assertInstanceOf(LengthAwarePaginator::class, $result);
         $this->assertCount(10, $result->items());
@@ -43,7 +48,7 @@ class JsonApiPaginatorTest extends TestCase
 
         $request = Request::create('/posts', 'GET', ['page' => ['number' => '1']]);
 
-        $result = JsonApiPaginator::apply(Post::query(), $request, defaultPageSize: 15, maxPageSize: 100);
+        $result = $this->paginator()->paginate(Post::query(), $request, defaultPageSize: 15, maxPageSize: 100);
 
         $this->assertCount(15, $result->items());
         $this->assertSame(1, $result->currentPage());
@@ -58,7 +63,7 @@ class JsonApiPaginatorTest extends TestCase
 
         $request = Request::create('/posts', 'GET', ['page' => ['number' => '1', 'size' => '10']]);
 
-        $result = JsonApiPaginator::apply(Post::query(), $request, defaultPageSize: 30, maxPageSize: 100);
+        $result = $this->paginator()->paginate(Post::query(), $request, defaultPageSize: 30, maxPageSize: 100);
 
         $this->assertSame(42, $result->total());
         $this->assertSame(5, $result->lastPage());
@@ -73,7 +78,7 @@ class JsonApiPaginatorTest extends TestCase
 
         $request = Request::create('/posts', 'GET', ['page' => ['number' => '3', 'size' => '10']]);
 
-        $result = JsonApiPaginator::apply(Post::query(), $request, defaultPageSize: 30, maxPageSize: 100);
+        $result = $this->paginator()->paginate(Post::query(), $request, defaultPageSize: 30, maxPageSize: 100);
 
         $this->assertSame(3, $result->currentPage());
         $this->assertCount(10, $result->items());
@@ -89,7 +94,7 @@ class JsonApiPaginatorTest extends TestCase
 
         $request = Request::create('/posts', 'GET', ['page' => ['number' => '1', 'size' => '9999']]);
 
-        $result = JsonApiPaginator::apply(Post::query(), $request, defaultPageSize: 30, maxPageSize: 25);
+        $result = $this->paginator()->paginate(Post::query(), $request, defaultPageSize: 30, maxPageSize: 25);
 
         $this->assertCount(25, $result->items());
         $this->assertSame(25, $result->perPage());
@@ -104,7 +109,7 @@ class JsonApiPaginatorTest extends TestCase
 
         $request = Request::create('/posts', 'GET', ['page' => ['number' => '0', 'size' => '5']]);
 
-        $result = JsonApiPaginator::apply(Post::query(), $request, defaultPageSize: 30, maxPageSize: 100);
+        $result = $this->paginator()->paginate(Post::query(), $request, defaultPageSize: 30, maxPageSize: 100);
 
         $this->assertSame(1, $result->currentPage());
         $this->assertSame('Post 1', $result->items()[0]->title);
@@ -119,7 +124,7 @@ class JsonApiPaginatorTest extends TestCase
 
         $request = Request::create('/posts', 'GET', ['page' => ['number' => '1', 'size' => '0']]);
 
-        $result = JsonApiPaginator::apply(Post::query(), $request, defaultPageSize: 20, maxPageSize: 100);
+        $result = $this->paginator()->paginate(Post::query(), $request, defaultPageSize: 20, maxPageSize: 100);
 
         $this->assertSame(20, $result->perPage());
         $this->assertCount(20, $result->items());
@@ -134,7 +139,7 @@ class JsonApiPaginatorTest extends TestCase
 
         $request = Request::create('/posts', 'GET', ['page' => ['number' => '1', 'size' => '-5']]);
 
-        $result = JsonApiPaginator::apply(Post::query(), $request, defaultPageSize: 20, maxPageSize: 100);
+        $result = $this->paginator()->paginate(Post::query(), $request, defaultPageSize: 20, maxPageSize: 100);
 
         $this->assertSame(20, $result->perPage());
         $this->assertCount(20, $result->items());
@@ -149,7 +154,7 @@ class JsonApiPaginatorTest extends TestCase
 
         $request = Request::create('/posts', 'GET', ['page' => ['number' => '-1', 'size' => '5']]);
 
-        $result = JsonApiPaginator::apply(Post::query(), $request, defaultPageSize: 30, maxPageSize: 100);
+        $result = $this->paginator()->paginate(Post::query(), $request, defaultPageSize: 30, maxPageSize: 100);
 
         $this->assertSame(1, $result->currentPage());
         $this->assertSame('Post 1', $result->items()[0]->title);
@@ -164,7 +169,7 @@ class JsonApiPaginatorTest extends TestCase
 
         $request = Request::create('/posts', 'GET');
 
-        $result = JsonApiPaginator::apply(Post::query(), $request, defaultPageSize: 30, maxPageSize: 100);
+        $result = $this->paginator()->paginate(Post::query(), $request, defaultPageSize: 30, maxPageSize: 100);
 
         $this->assertSame(1, $result->currentPage());
         $this->assertSame(30, $result->perPage());
@@ -180,7 +185,7 @@ class JsonApiPaginatorTest extends TestCase
 
         $request = Request::create('/posts', 'GET');
 
-        $result = JsonApiPaginator::apply(Post::query(), $request, defaultPageSize: 7, maxPageSize: 50);
+        $result = $this->paginator()->paginate(Post::query(), $request, defaultPageSize: 7, maxPageSize: 50);
 
         $this->assertSame(7, $result->perPage());
         $this->assertCount(7, $result->items());
@@ -195,7 +200,7 @@ class JsonApiPaginatorTest extends TestCase
 
         $request = Request::create('/posts', 'GET', ['page' => ['number' => '1', 'size' => '5']]);
 
-        $result = JsonApiPaginator::apply(Post::query(), $request, defaultPageSize: 30, maxPageSize: 100);
+        $result = $this->paginator()->paginate(Post::query(), $request, defaultPageSize: 30, maxPageSize: 100);
 
         $this->assertSame('page[number]', $result->getPageName());
     }
@@ -209,7 +214,7 @@ class JsonApiPaginatorTest extends TestCase
 
         $request = Request::create('/posts', 'GET', ['page' => ['number' => '1', 'size' => '5']]);
 
-        $result = JsonApiPaginator::apply(Post::query(), $request, defaultPageSize: 30, maxPageSize: 100);
+        $result = $this->paginator()->paginate(Post::query(), $request, defaultPageSize: 30, maxPageSize: 100);
 
         $nextPageUrl = $result->nextPageUrl();
         $this->assertStringContainsString('page%5Bsize%5D=5', $nextPageUrl);

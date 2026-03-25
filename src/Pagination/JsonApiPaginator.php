@@ -10,7 +10,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class JsonApiPaginator
 {
-    public static function apply(
+    public function paginate(
         Builder $query,
         Request $request,
         int $defaultPageSize = 30,
@@ -22,8 +22,8 @@ class JsonApiPaginator
             $pageParams = [];
         }
 
-        $pageSize = self::resolvePageSize($pageParams, $defaultPageSize, $maxPageSize);
-        $pageNumber = self::resolvePageNumber($pageParams);
+        $pageSize = $this->resolvePageSize($pageParams, $defaultPageSize, $maxPageSize);
+        $pageNumber = $this->resolvePageNumber($pageParams);
 
         $paginator = $query->paginate(
             perPage: $pageSize,
@@ -36,7 +36,7 @@ class JsonApiPaginator
         return $paginator;
     }
 
-    private static function resolvePageSize(array $pageParams, int $defaultPageSize, int $maxPageSize): int
+    private function resolvePageSize(array $pageParams, int $defaultPageSize, int $maxPageSize): int
     {
         $size = isset($pageParams['size']) ? (int) $pageParams['size'] : 0;
 
@@ -47,7 +47,7 @@ class JsonApiPaginator
         return min($size, $maxPageSize);
     }
 
-    private static function resolvePageNumber(array $pageParams): int
+    private function resolvePageNumber(array $pageParams): int
     {
         $number = isset($pageParams['number']) ? (int) $pageParams['number'] : 1;
 

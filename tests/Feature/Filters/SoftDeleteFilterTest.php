@@ -23,7 +23,7 @@ class SoftDeleteFilterTest extends TestCase
         $deleted = Post::create(['title' => 'Deleted', 'slug' => 'deleted']);
         $deleted->delete();
 
-        $filter = WithTrashed::make();
+        $filter = new WithTrashed;
 
         $results = Post::query()->tap(fn ($q) => $filter->apply($q, true))->get();
 
@@ -37,7 +37,7 @@ class SoftDeleteFilterTest extends TestCase
         $deleted = Post::create(['title' => 'Deleted', 'slug' => 'deleted']);
         $deleted->delete();
 
-        $filter = WithTrashed::make();
+        $filter = new WithTrashed;
 
         $results = Post::query()->tap(fn ($q) => $filter->apply($q, false))->get();
 
@@ -52,7 +52,7 @@ class SoftDeleteFilterTest extends TestCase
         $deleted = Post::create(['title' => 'Deleted', 'slug' => 'deleted']);
         $deleted->delete();
 
-        $filter = OnlyTrashed::make();
+        $filter = new OnlyTrashed;
 
         $results = Post::query()->tap(fn ($q) => $filter->apply($q, true))->get();
 
@@ -66,7 +66,7 @@ class SoftDeleteFilterTest extends TestCase
         Post::create(['title' => 'First', 'slug' => 'first']);
         Post::create(['title' => 'Second', 'slug' => 'second']);
 
-        $filter = WithTrashed::make();
+        $filter = new WithTrashed;
 
         $results = Post::query()->tap(fn ($q) => $filter->apply($q, true))->get();
 
@@ -80,7 +80,7 @@ class SoftDeleteFilterTest extends TestCase
         $deleted = Post::create(['title' => 'Deleted', 'slug' => 'deleted']);
         $deleted->delete();
 
-        $filter = WithTrashed::make();
+        $filter = new WithTrashed;
 
         $results = Post::query()->tap(fn ($q) => $filter->apply($q, '1'))->get();
 
@@ -93,7 +93,7 @@ class SoftDeleteFilterTest extends TestCase
         Post::create(['title' => 'Post', 'slug' => 'post']);
         $comment = Comment::create(['post_id' => Post::first()->id, 'author' => 'John', 'body' => 'Nice']);
 
-        $filter = WithTrashed::make();
+        $filter = new WithTrashed;
 
         $results = Comment::query()->tap(fn ($q) => $filter->apply($q, true))->get();
 
@@ -106,7 +106,7 @@ class SoftDeleteFilterTest extends TestCase
         Post::create(['title' => 'Post', 'slug' => 'post']);
         Comment::create(['post_id' => Post::first()->id, 'author' => 'John', 'body' => 'Nice']);
 
-        $filter = OnlyTrashed::make();
+        $filter = new OnlyTrashed;
 
         $results = Comment::query()->tap(fn ($q) => $filter->apply($q, true))->get();
 

@@ -135,7 +135,7 @@ class FilterDispatcherTest extends TestCase
         $post2 = Post::create(['title' => 'Post 2', 'slug' => 'post-2']);
         Comment::create(['post_id' => $post2->id, 'author' => 'Jane', 'body' => 'B']);
 
-        $request = Request::create('/posts', 'GET', ['filter' => ['comments' => ['author' => 'John']]]);
+        $request = Request::create('/posts', 'GET', ['filter' => ['comments.author' => 'John']]);
 
         $dispatcher = FilterDispatcher::make()->relationships(['comments']);
 
@@ -157,7 +157,7 @@ class FilterDispatcherTest extends TestCase
         $post1 = Post::create(['title' => 'Post 1', 'slug' => 'post-1', 'user_id' => $john->id]);
         $post2 = Post::create(['title' => 'Post 2', 'slug' => 'post-2', 'user_id' => $jane->id]);
 
-        $request = Request::create('/posts', 'GET', ['filter' => ['user' => ['name' => 'John']]]);
+        $request = Request::create('/posts', 'GET', ['filter' => ['user.name' => 'John']]);
 
         $dispatcher = FilterDispatcher::make()->relationships(['user']);
 
@@ -183,7 +183,7 @@ class FilterDispatcherTest extends TestCase
         Post::create(['title' => 'Swedish Post', 'slug' => 'swedish-post', 'user_id' => $jane->id]);
 
         $request = Request::create('/posts', 'GET', [
-            'filter' => ['user' => ['country' => ['name' => 'Denmark']]],
+            'filter' => ['user.country.name' => 'Denmark'],
         ]);
 
         $dispatcher = FilterDispatcher::make()->relationships(['user']);
@@ -211,7 +211,7 @@ class FilterDispatcherTest extends TestCase
         $request = Request::create('/posts', 'GET', ['filter' => ['with-trashed' => 'true']]);
 
         $dispatcher = FilterDispatcher::make()->additionalFilters([
-            WithTrashed::make(),
+            new WithTrashed,
         ]);
 
         $query = Post::query();
@@ -349,7 +349,7 @@ class FilterDispatcherTest extends TestCase
         Comment::create(['post_id' => $post2->id, 'author' => 'Jane', 'body' => 'B', 'created_at' => '2024-06-01']);
 
         $request = Request::create('/posts', 'GET', [
-            'filter' => ['comments' => ['created_at' => ['gte' => '2024-01-01']]],
+            'filter' => ['comments.created_at' => ['gte' => '2024-01-01']],
         ]);
 
         $dispatcher = FilterDispatcher::make()->relationships(['comments']);
@@ -397,8 +397,12 @@ class FilterDispatcherTest extends TestCase
         $post3 = Post::create(['title' => 'Post 3', 'slug' => 'post-3']);
         Comment::create(['post_id' => $post3->id, 'author' => 'Jane', 'body' => 'Great']);
 
+        $post4 = Post::create(['title' => 'Post 4', 'slug' => 'post-4']);
+        Comment::create(['post_id' => $post4->id, 'author' => 'John', 'body' => 'Bad']);
+        Comment::create(['post_id' => $post4->id, 'author' => 'Jane', 'body' => 'Great']);
+
         $request = Request::create('/posts', 'GET', [
-            'filter' => ['comments' => ['author' => 'John', 'body' => 'Great']],
+            'filter' => ['comments.author' => 'John', 'comments.body' => 'Great'],
         ]);
 
         $dispatcher = FilterDispatcher::make()->relationships(['comments']);
@@ -430,7 +434,7 @@ class FilterDispatcherTest extends TestCase
         $request = Request::create('/posts', 'GET', [
             'filter' => [
                 'title' => 'Match',
-                'comments' => ['author' => 'John'],
+                'comments.author' => 'John',
                 'with-trashed' => 'true',
             ],
         ]);
@@ -438,7 +442,7 @@ class FilterDispatcherTest extends TestCase
         $dispatcher = FilterDispatcher::make()
             ->attributes(['title'])
             ->relationships(['comments'])
-            ->additionalFilters([WithTrashed::make()]);
+            ->additionalFilters([new WithTrashed]);
 
         $query = Post::query();
         $dispatcher->apply($query, $request);

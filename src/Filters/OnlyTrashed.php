@@ -12,14 +12,9 @@ class OnlyTrashed implements Filter
 {
     use DetectsSoftDeletes;
 
-    protected function __construct(
+    public function __construct(
         protected readonly string $key = 'only-trashed',
     ) {
-    }
-
-    public static function make(string $key = 'only-trashed'): static
-    {
-        return new static($key);
     }
 
     public function key(): string

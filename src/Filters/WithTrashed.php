@@ -12,14 +12,9 @@ class WithTrashed implements Filter
 {
     use DetectsSoftDeletes;
 
-    protected function __construct(
+    public function __construct(
         protected readonly string $key = 'with-trashed',
     ) {
-    }
-
-    public static function make(string $key = 'with-trashed'): static
-    {
-        return new static($key);
     }
 
     public function key(): string

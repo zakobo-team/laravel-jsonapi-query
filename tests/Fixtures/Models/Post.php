@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Zakobo\JsonApiQuery\Tests\Fixtures\Models;
 
+use Illuminate\Database\Eloquent\Attributes\UseResource;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -13,7 +14,9 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\PostResource;
 
+#[UseResource(PostResource::class)]
 class Post extends Model
 {
     use SoftDeletes;
@@ -23,6 +26,11 @@ class Post extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function activeUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id')->where('name', 'Alice');
     }
 
     public function meta(): HasOne
@@ -63,5 +71,16 @@ class Post extends Model
     public function scopeMinVotes($query, int $minVotes): void
     {
         $query->where('votes', '>=', $minVotes);
+    }
+
+    public function scopeOrderByLatestComment($query, string $direction): void
+    {
+        $query->orderBy(
+            Comment::select('created_at')
+                ->whereColumn('comments.post_id', 'posts.id')
+                ->latest()
+                ->limit(1),
+            $direction,
+        );
     }
 }

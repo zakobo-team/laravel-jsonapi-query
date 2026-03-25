@@ -32,6 +32,7 @@ class JsonApiExceptionRenderer
             }
 
             return match (true) {
+                $e instanceof InvalidJsonApiQueryException => self::jsonResponse(['errors' => $e->errors()], 400),
                 $e instanceof ValidationException => self::renderValidation($e),
                 $e instanceof ModelNotFoundException => self::renderError('Not Found', 404, $e->getMessage()),
                 $e instanceof AuthenticationException => self::renderError('Unauthenticated', 401, $e->getMessage()),

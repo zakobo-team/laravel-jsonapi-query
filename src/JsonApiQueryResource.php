@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Zakobo\JsonApiQuery;
 
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\JsonApi\JsonApiResource;
 
 abstract class JsonApiQueryResource extends JsonApiResource
@@ -30,13 +31,6 @@ abstract class JsonApiQueryResource extends JsonApiResource
     public array $additionalFilters = [];
 
     /**
-     * Area-aware query scopes.
-     *
-     * @var array<int, string>
-     */
-    public array $scopedBy = [];
-
-    /**
      * Default sort when no ?sort= parameter is provided.
      */
     public ?string $defaultSort = null;
@@ -52,8 +46,14 @@ abstract class JsonApiQueryResource extends JsonApiResource
     public ?int $maxPageSize = null;
 
     /**
+     * Additional sorts beyond auto-generated (scopes, custom).
+     *
+     * @var array<string, class-string>
+     */
+    public array $additionalSorts = [];
+
+    /**
      * Create an instance solely for reading query configuration.
-     * Used by HandlesJsonApi trait to read properties without a model.
      */
     public static function queryConfig(): static
     {
@@ -68,7 +68,10 @@ abstract class JsonApiQueryResource extends JsonApiResource
      */
     public function filterableAttributes(): array
     {
-        return array_values(array_diff($this->attributes ?? [], $this->excludedFromFilter));
+        return array_values(array_diff(
+            $this->normalizedAttributeNames(),
+            $this->excludedFromFilter,
+        ));
     }
 
     /**
@@ -79,7 +82,10 @@ abstract class JsonApiQueryResource extends JsonApiResource
      */
     public function sortableAttributes(): array
     {
-        return array_values(array_diff($this->attributes ?? [], $this->excludedFromSorting));
+        return array_values(array_diff(
+            $this->normalizedAttributeNames(),
+            $this->excludedFromSorting,
+        ));
     }
 
     /**
@@ -89,6 +95,58 @@ abstract class JsonApiQueryResource extends JsonApiResource
      */
     public function filterableRelationships(): array
     {
-        return $this->relationships ?? [];
+        return $this->normalizedRelationshipNames();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function normalizedAttributeNames(): array
+    {
+        $attributes = $this->toAttributes(Request::create('/'));
+
+        if (! is_array($attributes)) {
+            return [];
+        }
+
+        $names = [];
+
+        foreach ($attributes as $key => $value) {
+            if (is_int($key) && is_string($value)) {
+                $names[] = $value;
+            }
+
+            if (is_string($key)) {
+                $names[] = $key;
+            }
+        }
+
+        return $names;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function normalizedRelationshipNames(): array
+    {
+        $relationships = $this->toRelationships(Request::create('/'));
+
+        if (! is_array($relationships)) {
+            return [];
+        }
+
+        $names = [];
+
+        foreach ($relationships as $key => $value) {
+            if (is_int($key) && is_string($value)) {
+                $names[] = $value;
+            }
+
+            if (is_string($key)) {
+                $names[] = $key;
+            }
+        }
+
+        return $names;
     }
 }

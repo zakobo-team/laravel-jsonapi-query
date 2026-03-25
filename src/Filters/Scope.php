@@ -13,15 +13,10 @@ class Scope implements Filter
 {
     use DeserializesValue;
 
-    protected function __construct(
+    public function __construct(
         protected readonly string $key,
         protected readonly ?string $scopeName = null,
     ) {
-    }
-
-    public static function make(string $key, ?string $scopeName = null): static
-    {
-        return new static($key, $scopeName);
     }
 
     public function key(): string

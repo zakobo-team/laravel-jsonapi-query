@@ -64,8 +64,14 @@ class FilterDispatcher
             return;
         }
 
-        foreach ($filters as $key => $value) {
+        [$normalizedFilters, $deferredRelationshipFilters] = $this->normalizeFilters($filters);
+
+        foreach ($normalizedFilters as $key => $value) {
             $this->dispatchFilter($query, $key, $value);
+        }
+
+        foreach ($deferredRelationshipFilters as $relationship => $value) {
+            $this->applyRelationshipFilter($query, $relationship, $value);
         }
     }
 
@@ -85,7 +91,116 @@ class FilterDispatcher
 
         if (isset($this->additionalFilters[$key])) {
             $this->additionalFilters[$key]->apply($query, $value);
+
+            return;
         }
+
+    }
+
+    /**
+     * Normalize dotted relationship filters so predicates targeting the same
+     * relationship are applied within a single whereHas subquery.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array{0: array<string, mixed>, 1: array<string, array<string, mixed>>}
+     */
+    protected function normalizeFilters(array $filters): array
+    {
+        $normalizedFilters = [];
+        $normalizedRelationshipFilters = [];
+        $deferredRelationshipFilters = [];
+
+        foreach ($filters as $key => $value) {
+            if (! is_string($key)) {
+                continue;
+            }
+
+            if ($this->isDottedRelationshipFilter($key)) {
+                [$relationship, $nestedValue] = $this->normalizeDottedRelationshipFilter($key, $value);
+
+                $existing = $normalizedRelationshipFilters[$relationship] ?? [];
+                $normalizedRelationshipFilters[$relationship] = $this->mergeFilterValues($existing, $nestedValue);
+
+                continue;
+            }
+
+            $normalizedFilters[$key] = $value;
+        }
+
+        foreach ($normalizedRelationshipFilters as $relationship => $filters) {
+            if (! array_key_exists($relationship, $normalizedFilters)) {
+                $normalizedFilters[$relationship] = $filters;
+
+                continue;
+            }
+
+            if (is_array($normalizedFilters[$relationship])) {
+                $normalizedFilters[$relationship] = $this->mergeFilterValues($normalizedFilters[$relationship], $filters);
+
+                continue;
+            }
+
+            $deferredRelationshipFilters[$relationship] = $filters;
+        }
+
+        return [$normalizedFilters, $deferredRelationshipFilters];
+    }
+
+    protected function isDottedRelationshipFilter(string $key): bool
+    {
+        if (! str_contains($key, '.')) {
+            return false;
+        }
+
+        $segments = explode('.', $key, 2);
+        $relationship = $segments[0];
+
+        return in_array($relationship, $this->relationships, true);
+    }
+
+    /**
+     * @return array{0: string, 1: array<string, mixed>}
+     */
+    protected function normalizeDottedRelationshipFilter(string $key, mixed $value): array
+    {
+        [$relationship, $remainingPath] = explode('.', $key, 2);
+
+        return [$relationship, $this->buildNestedValue($remainingPath, $value)];
+    }
+
+    protected function buildNestedValue(string $path, mixed $value): array
+    {
+        if (! str_contains($path, '.')) {
+            return [$path => $value];
+        }
+
+        $segments = explode('.', $path, 2);
+
+        return [$segments[0] => $this->buildNestedValue($segments[1], $value)];
+    }
+
+    /**
+     * @param  array<string, mixed>  $existing
+     * @param  array<string, mixed>  $incoming
+     * @return array<string, mixed>
+     */
+    protected function mergeFilterValues(array $existing, array $incoming): array
+    {
+        foreach ($incoming as $key => $value) {
+            if (
+                isset($existing[$key])
+                && is_array($existing[$key])
+                && is_array($value)
+            ) {
+                $existing[$key] = $this->mergeFilterValues($existing[$key], $value);
+
+                continue;
+            }
+
+            $existing[$key] = $value;
+        }
+
+        return $existing;
     }
 
     protected function applyAttributeFilter(Builder $query, string $key, mixed $value): void

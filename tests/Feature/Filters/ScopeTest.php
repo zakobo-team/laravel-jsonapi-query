@@ -20,7 +20,7 @@ class ScopeTest extends TestCase
         Post::create(['title' => 'Popular', 'slug' => 'popular', 'votes' => 200]);
         Post::create(['title' => 'Unpopular', 'slug' => 'unpopular', 'votes' => 5]);
 
-        $filter = Scope::make('popular');
+        $filter = new Scope('popular');
 
         $results = Post::query()->tap(fn ($q) => $filter->apply($q, true))->get();
 
@@ -34,7 +34,7 @@ class ScopeTest extends TestCase
         Post::create(['title' => 'Popular', 'slug' => 'popular', 'votes' => 200]);
         Post::create(['title' => 'Unpopular', 'slug' => 'unpopular', 'votes' => 5]);
 
-        $filter = Scope::make('is-popular', 'popular');
+        $filter = new Scope('is-popular', 'popular');
 
         $results = Post::query()->tap(fn ($q) => $filter->apply($q, true))->get();
 
@@ -48,7 +48,7 @@ class ScopeTest extends TestCase
         Post::create(['title' => 'Popular', 'slug' => 'popular', 'votes' => 200]);
         Post::create(['title' => 'Unpopular', 'slug' => 'unpopular', 'votes' => 5]);
 
-        $filter = Scope::make('popular')->asBoolean();
+        $filter = (new Scope('popular'))->asBoolean();
 
         $results = Post::query()->tap(fn ($q) => $filter->apply($q, 'false'))->get();
 
@@ -64,7 +64,7 @@ class ScopeTest extends TestCase
         Post::create(['title' => 'Mid', 'slug' => 'mid', 'votes' => 50]);
         Post::create(['title' => 'High', 'slug' => 'high', 'votes' => 80]);
 
-        $filter = Scope::make('min-votes');
+        $filter = new Scope('min-votes');
 
         $results = Post::query()->tap(fn ($q) => $filter->apply($q, '50'))->get();
 
@@ -75,7 +75,7 @@ class ScopeTest extends TestCase
     #[Test]
     public function it_returns_the_key(): void
     {
-        $filter = Scope::make('is-popular');
+        $filter = new Scope('is-popular');
 
         $this->assertSame('is-popular', $filter->key());
     }

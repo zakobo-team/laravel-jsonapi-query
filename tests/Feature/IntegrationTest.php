@@ -5,307 +5,247 @@ declare(strict_types=1);
 namespace Zakobo\JsonApiQuery\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Routing\Controller;
+use Illuminate\Http\Request;
 use PHPUnit\Framework\Attributes\Test;
-use Zakobo\JsonApiQuery\Http\Concerns\HandlesJsonApiIndex;
-use Zakobo\JsonApiQuery\Http\Contracts\JsonApiController;
-use Zakobo\JsonApiQuery\Tests\Fixtures\Controllers\PostCommentsController;
-use Zakobo\JsonApiQuery\Tests\Fixtures\Controllers\PostController;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Comment;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Post;
-use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\ScopedPostResource;
+use Zakobo\JsonApiQuery\Tests\Fixtures\Models\User;
+use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\PostResource;
 use Zakobo\JsonApiQuery\Tests\TestCase;
 
 class IntegrationTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function defineRoutes($router): void
-    {
-        $router->get('/api/posts', [PostController::class, 'index']);
-        $router->get('/api/posts/{post}', [PostController::class, 'show']);
-        $router->post('/api/posts', [PostController::class, 'store']);
-        $router->patch('/api/posts/{post}', [PostController::class, 'update']);
-        $router->delete('/api/posts/{post}', [PostController::class, 'destroy']);
-        $router->get('/api/posts/{post}/comments', [PostCommentsController::class, 'index']);
-        $router->get('/api/scoped-posts', [IntegrationScopedPostController::class, 'index']);
-    }
-
-    // =========================================================================
-    // 1. Filter + sort + paginate in one request
-    // =========================================================================
+    // --- Test 1: Filter + sort + paginate in one call ---
 
     #[Test]
-    public function it_combines_filter_sort_and_paginate_in_one_request(): void
+    public function it_filters_sorts_and_paginates_in_one_call(): void
     {
-        for ($i = 1; $i <= 12; $i++) {
-            Post::create([
-                'title' => "Published Post {$i}",
-                'slug' => "published-{$i}",
-                'published' => true,
-            ]);
-        }
+        Post::create(['title' => 'Alpha', 'slug' => 'alpha', 'published' => true, 'votes' => 10]);
+        Post::create(['title' => 'Bravo', 'slug' => 'bravo', 'published' => true, 'votes' => 50]);
+        Post::create(['title' => 'Charlie', 'slug' => 'charlie', 'published' => true, 'votes' => 30]);
+        Post::create(['title' => 'Delta', 'slug' => 'delta', 'published' => true, 'votes' => 70]);
+        Post::create(['title' => 'Echo', 'slug' => 'echo', 'published' => false, 'votes' => 90]);
 
-        for ($i = 1; $i <= 8; $i++) {
-            Post::create([
-                'title' => "Draft Post {$i}",
-                'slug' => "draft-{$i}",
-                'published' => false,
-            ]);
-        }
-
-        $response = $this->getJson('/api/posts?filter[published]=1&sort=-title&page[number]=1&page[size]=5');
-
-        $response->assertOk();
-        $response->assertJsonCount(5, 'data');
-
-        // Sorted descending by title: "Published Post 9" comes before "Published Post 8" (string sort)
-        $titles = array_map(
-            fn ($item) => $item['attributes']['title'],
-            $response->json('data'),
-        );
-        $sortedTitles = $titles;
-        usort($sortedTitles, fn ($a, $b) => strcmp($b, $a));
-        $this->assertSame($sortedTitles, $titles);
-
-        // All returned posts are published
-        foreach ($response->json('data') as $item) {
-            $this->assertSame(1, $item['attributes']['published']);
-        }
-
-        // Pagination meta shows correct total (12 published posts)
-        $response->assertJsonPath('meta.total', 12);
-        $response->assertJsonPath('meta.current_page', 1);
-    }
-
-    // =========================================================================
-    // 2. Soft delete lifecycle
-    // =========================================================================
-
-    #[Test]
-    public function it_handles_soft_delete_lifecycle(): void
-    {
-        $post = Post::create(['title' => 'Lifecycle Post', 'slug' => 'lifecycle']);
-
-        // Verify post appears in listing
-        $response = $this->getJson('/api/posts');
-        $response->assertOk();
-        $response->assertJsonCount(1, 'data');
-        $response->assertJsonPath('data.0.attributes.title', 'Lifecycle Post');
-
-        // Soft delete the post
-        $this->deleteJson("/api/posts/{$post->id}")->assertNoContent();
-
-        // Verify post no longer appears in listing
-        $response = $this->getJson('/api/posts');
-        $response->assertOk();
-        $response->assertJsonCount(0, 'data');
-
-        // Verify post appears when with-trashed filter is used
-        $response = $this->getJson('/api/posts?filter[with-trashed]=true');
-        $response->assertOk();
-        $response->assertJsonCount(1, 'data');
-        $response->assertJsonPath('data.0.attributes.title', 'Lifecycle Post');
-    }
-
-    // =========================================================================
-    // 3. Full CRUD lifecycle
-    // =========================================================================
-
-    #[Test]
-    public function it_handles_full_crud_lifecycle(): void
-    {
-        // CREATE
-        $createResponse = $this->postJson('/api/posts', [
-            'data' => [
-                'type' => 'posts',
-                'attributes' => [
-                    'title' => 'Integration Post',
-                    'slug' => 'integration-post',
-                    'votes' => 5,
-                    'published' => false,
-                ],
-            ],
+        $request = Request::create('/posts', 'GET', [
+            'filter' => ['published' => '1'],
+            'sort' => '-votes',
+            'page' => ['number' => '1', 'size' => '2'],
         ]);
 
-        $createResponse->assertStatus(201);
-        $postId = $createResponse->json('data.id');
-        $this->assertNotNull($postId);
+        $result = Post::query()->jsonApiCollection(PostResource::class, $request);
+        $response = $result->toResponse($request);
+        $data = json_decode($response->getContent(), true);
 
-        // READ (show) - verify created data
-        $showResponse = $this->getJson("/api/posts/{$postId}");
-        $showResponse->assertOk();
-        $showResponse->assertJsonPath('data.type', 'posts');
-        $showResponse->assertJsonPath('data.id', (string) $postId);
-        $showResponse->assertJsonPath('data.attributes.title', 'Integration Post');
-        $showResponse->assertJsonPath('data.attributes.slug', 'integration-post');
-        $showResponse->assertJsonPath('data.attributes.votes', 5);
+        $this->assertCount(2, $data['data']);
+        $this->assertSame('delta', $data['data'][0]['attributes']['slug']);
+        $this->assertSame('bravo', $data['data'][1]['attributes']['slug']);
 
-        // UPDATE
-        $updateResponse = $this->patchJson("/api/posts/{$postId}", [
-            'data' => [
-                'type' => 'posts',
-                'id' => (string) $postId,
-                'attributes' => [
-                    'title' => 'Updated Integration Post',
-                    'votes' => 42,
-                ],
-            ],
+        // Verify pagination meta exists
+        $this->assertArrayHasKey('meta', $data);
+    }
+
+    // --- Test 2: Soft delete lifecycle via macro ---
+
+    #[Test]
+    public function it_handles_soft_delete_lifecycle_via_macro(): void
+    {
+        $post = Post::create(['title' => 'Doomed', 'slug' => 'doomed']);
+        Post::create(['title' => 'Survivor', 'slug' => 'survivor']);
+
+        // Before deletion: both visible
+        $requestBefore = Request::create('/posts', 'GET');
+        $resultBefore = Post::query()->jsonApiCollection(PostResource::class, $requestBefore);
+        $dataBefore = json_decode($resultBefore->toResponse($requestBefore)->getContent(), true);
+        $this->assertCount(2, $dataBefore['data']);
+
+        // Delete the post
+        $post->delete();
+
+        // After deletion: only survivor visible without with-trashed
+        $requestAfter = Request::create('/posts', 'GET');
+        $resultAfter = Post::query()->jsonApiCollection(PostResource::class, $requestAfter);
+        $dataAfter = json_decode($resultAfter->toResponse($requestAfter)->getContent(), true);
+        $this->assertCount(1, $dataAfter['data']);
+        $this->assertSame('survivor', $dataAfter['data'][0]['attributes']['slug']);
+
+        // With with-trashed: both visible again
+        $requestTrashed = Request::create('/posts', 'GET', ['filter' => ['with-trashed' => 'true']]);
+        $resultTrashed = Post::query()->jsonApiCollection(PostResource::class, $requestTrashed);
+        $dataTrashed = json_decode($resultTrashed->toResponse($requestTrashed)->getContent(), true);
+        $this->assertCount(2, $dataTrashed['data']);
+    }
+
+    // --- Test 3: Nested relationship filter via macro ---
+
+    #[Test]
+    public function it_filters_by_nested_relationship(): void
+    {
+        $post1 = Post::create(['title' => 'Post One', 'slug' => 'post-one']);
+        Comment::create(['post_id' => $post1->id, 'author' => 'Alice', 'body' => 'Great post']);
+        Comment::create(['post_id' => $post1->id, 'author' => 'Bob', 'body' => 'Agreed']);
+
+        $post2 = Post::create(['title' => 'Post Two', 'slug' => 'post-two']);
+        Comment::create(['post_id' => $post2->id, 'author' => 'Charlie', 'body' => 'Interesting']);
+
+        $post3 = Post::create(['title' => 'Post Three', 'slug' => 'post-three']);
+        // No comments
+
+        // Filter for posts that have a comment by Alice
+        $request = Request::create('/posts', 'GET', [
+            'filter' => ['comments.author' => 'Alice'],
         ]);
 
-        $updateResponse->assertOk();
-        $updateResponse->assertJsonPath('data.attributes.title', 'Updated Integration Post');
+        $result = Post::query()->jsonApiCollection(PostResource::class, $request);
+        $data = json_decode($result->toResponse($request)->getContent(), true);
 
-        // READ again - verify update persisted
-        $showResponse = $this->getJson("/api/posts/{$postId}");
-        $showResponse->assertOk();
-        $showResponse->assertJsonPath('data.attributes.title', 'Updated Integration Post');
-        $showResponse->assertJsonPath('data.attributes.votes', 42);
-        $showResponse->assertJsonPath('data.attributes.slug', 'integration-post'); // unchanged
-
-        // DELETE
-        $this->deleteJson("/api/posts/{$postId}")->assertNoContent();
-
-        // READ after delete - 404
-        $this->getJson("/api/posts/{$postId}")->assertNotFound();
+        $this->assertCount(1, $data['data']);
+        $this->assertSame('post-one', $data['data'][0]['attributes']['slug']);
     }
-
-    // =========================================================================
-    // 4. Nested relationship filter
-    // =========================================================================
 
     #[Test]
-    public function it_filters_by_nested_relationship_attribute(): void
+    public function it_requires_the_same_related_record_to_match_multiple_dot_filters(): void
     {
-        $postByJohn = Post::create(['title' => 'Johns Post', 'slug' => 'johns-post']);
-        Comment::create(['post_id' => $postByJohn->id, 'author' => 'John', 'body' => 'My comment']);
+        $truePositive = Post::create(['title' => 'True Positive', 'slug' => 'true-positive']);
+        Comment::create(['post_id' => $truePositive->id, 'author' => 'John', 'body' => 'Great']);
 
-        $postByJane = Post::create(['title' => 'Janes Post', 'slug' => 'janes-post']);
-        Comment::create(['post_id' => $postByJane->id, 'author' => 'Jane', 'body' => 'My comment']);
+        $falsePositive = Post::create(['title' => 'False Positive', 'slug' => 'false-positive']);
+        Comment::create(['post_id' => $falsePositive->id, 'author' => 'John', 'body' => 'Bad']);
+        Comment::create(['post_id' => $falsePositive->id, 'author' => 'Jane', 'body' => 'Great']);
 
-        $postWithBoth = Post::create(['title' => 'Mixed Post', 'slug' => 'mixed-post']);
-        Comment::create(['post_id' => $postWithBoth->id, 'author' => 'John', 'body' => 'Johns comment']);
-        Comment::create(['post_id' => $postWithBoth->id, 'author' => 'Jane', 'body' => 'Janes comment']);
+        $request = Request::create('/posts', 'GET', [
+            'filter' => ['comments.author' => 'John', 'comments.body' => 'Great'],
+        ]);
 
-        $response = $this->getJson('/api/posts?filter[comments][author]=John');
+        $result = Post::query()->jsonApiCollection(PostResource::class, $request);
+        $data = json_decode($result->toResponse($request)->getContent(), true);
 
-        $response->assertOk();
-        $response->assertJsonCount(2, 'data');
-
-        $returnedTitles = array_map(
-            fn ($item) => $item['attributes']['title'],
-            $response->json('data'),
-        );
-        sort($returnedTitles);
-
-        $this->assertSame(['Johns Post', 'Mixed Post'], $returnedTitles);
+        $this->assertCount(1, $data['data']);
+        $this->assertSame('true-positive', $data['data'][0]['attributes']['slug']);
     }
 
-    // =========================================================================
-    // 5. Scope + filter combined
-    // =========================================================================
+    // --- Test 4: Empty results return {"data": []} ---
 
     #[Test]
-    public function it_applies_scope_and_filter_together(): void
+    public function it_returns_empty_data_array_for_no_results(): void
     {
-        Post::create(['title' => 'Public Match', 'slug' => 'public-match', 'published' => true]);
-        Post::create(['title' => 'Public Other', 'slug' => 'public-other', 'published' => true]);
-        Post::create(['title' => 'Draft Match', 'slug' => 'draft-match', 'published' => false]);
-        Post::create(['title' => 'Draft Other', 'slug' => 'draft-other', 'published' => false]);
+        Post::create(['title' => 'Existing', 'slug' => 'existing', 'votes' => 5]);
 
-        // X-Test-Area: public activates TestAreaScope (filters to published=true)
-        // filter[title]=Public Match further filters by title
-        $response = $this->getJson(
-            '/api/scoped-posts?filter[title]=Public Match',
-            ['X-Test-Area' => 'public'],
-        );
+        $request = Request::create('/posts', 'GET', [
+            'filter' => ['votes' => ['gt' => '999']],
+        ]);
 
-        $response->assertOk();
-        $response->assertJsonCount(1, 'data');
-        $response->assertJsonPath('data.0.attributes.title', 'Public Match');
-        $response->assertJsonPath('data.0.attributes.published', 1);
+        $result = Post::query()->jsonApiCollection(PostResource::class, $request);
+        $data = json_decode($result->toResponse($request)->getContent(), true);
+
+        $this->assertSame([], $data['data']);
+        $this->assertArrayHasKey('meta', $data);
     }
 
-    // =========================================================================
-    // 6. Relationship endpoint with filter + sort + pagination
-    // =========================================================================
+    // --- Test 5: Dot-notation relationship filter + relationship sort + pagination ---
 
     #[Test]
-    public function it_combines_filter_sort_and_pagination_on_relationship_endpoint(): void
+    public function it_filters_by_dot_notation_sorts_by_relationship_and_paginates(): void
     {
-        $post = Post::create(['title' => 'Parent Post', 'slug' => 'parent-post']);
+        $alice = User::create(['name' => 'Alice', 'email' => 'alice@test.com']);
+        $bob = User::create(['name' => 'Bob', 'email' => 'bob@test.com']);
+        $charlie = User::create(['name' => 'Charlie', 'email' => 'charlie@test.com']);
 
-        for ($i = 1; $i <= 10; $i++) {
-            Comment::create([
-                'post_id' => $post->id,
-                'author' => 'John',
-                'body' => "John comment {$i}",
-            ]);
-        }
+        $post1 = Post::create(['title' => 'Charlie Post', 'slug' => 'charlie', 'user_id' => $charlie->id]);
+        Comment::create(['post_id' => $post1->id, 'author' => 'X', 'body' => 'review']);
 
-        for ($i = 1; $i <= 5; $i++) {
-            Comment::create([
-                'post_id' => $post->id,
-                'author' => 'Jane',
-                'body' => "Jane comment {$i}",
-            ]);
-        }
+        $post2 = Post::create(['title' => 'Alice Post', 'slug' => 'alice', 'user_id' => $alice->id]);
+        Comment::create(['post_id' => $post2->id, 'author' => 'Y', 'body' => 'review']);
 
-        // Another post's comments should never appear
-        $otherPost = Post::create(['title' => 'Other Post', 'slug' => 'other-post']);
-        Comment::create(['post_id' => $otherPost->id, 'author' => 'John', 'body' => 'Other post comment']);
+        $post3 = Post::create(['title' => 'Bob Post', 'slug' => 'bob', 'user_id' => $bob->id]);
+        Comment::create(['post_id' => $post3->id, 'author' => 'Z', 'body' => 'review']);
 
-        $response = $this->getJson(
-            "/api/posts/{$post->id}/comments?filter[author]=John&sort=-body&page[number]=1&page[size]=5",
-        );
+        // No comments on this one — filtered out by has comments
+        Post::create(['title' => 'No Comments', 'slug' => 'none', 'user_id' => $alice->id]);
 
-        $response->assertOk();
-        $response->assertJsonCount(5, 'data');
+        $request = Request::create('/posts', 'GET', [
+            'filter' => ['comments' => 'true'],
+            'sort' => 'user.name',
+            'page' => ['number' => '1', 'size' => '2'],
+        ]);
 
-        // All returned comments belong to John
-        foreach ($response->json('data') as $item) {
-            $this->assertSame('John', $item['attributes']['author']);
-        }
+        $result = Post::query()->jsonApiCollection(PostResource::class, $request);
+        $data = json_decode($result->toResponse($request)->getContent(), true);
 
-        // Sorted descending by body
-        $bodies = array_map(fn ($item) => $item['attributes']['body'], $response->json('data'));
-        $sortedBodies = $bodies;
-        usort($sortedBodies, fn ($a, $b) => strcmp($b, $a));
-        $this->assertSame($sortedBodies, $bodies);
-
-        // Pagination meta shows 10 total (only John's comments on this post)
-        $response->assertJsonPath('meta.total', 10);
+        $this->assertCount(2, $data['data']);
+        $this->assertSame('alice', $data['data'][0]['attributes']['slug']);
+        $this->assertSame('bob', $data['data'][1]['attributes']['slug']);
+        $this->assertSame(3, $data['meta']['total']);
     }
 
-    // =========================================================================
-    // 7. Empty results return correct JSON:API format
-    // =========================================================================
+    // --- Test 6: Relationship sort (BelongsTo) + attribute sort combined ---
 
     #[Test]
-    public function it_returns_correct_json_api_format_for_empty_results(): void
+    public function it_sorts_by_relationship_then_attribute(): void
     {
-        $response = $this->getJson('/api/posts?filter[slug]=nonexistent');
+        $alice = User::create(['name' => 'Alice', 'email' => 'alice@test.com']);
+        $bob = User::create(['name' => 'Bob', 'email' => 'bob@test.com']);
 
-        $response->assertOk();
-        $response->assertHeader('Content-Type', 'application/vnd.api+json');
-        $response->assertJsonPath('data', []);
-    }
-}
+        Post::create(['title' => 'Bravo', 'slug' => 'b', 'user_id' => $alice->id]);
+        Post::create(['title' => 'Alpha', 'slug' => 'a', 'user_id' => $alice->id]);
+        Post::create(['title' => 'Charlie', 'slug' => 'c', 'user_id' => $bob->id]);
 
-/**
- * Controller using ScopedPostResource for scope + filter integration tests.
- */
-class IntegrationScopedPostController extends Controller implements JsonApiController
-{
-    use HandlesJsonApiIndex;
+        $request = Request::create('/posts', 'GET', ['sort' => 'user.name,title']);
 
-    public function getResource(): string
-    {
-        return ScopedPostResource::class;
+        $result = Post::query()->jsonApiCollection(PostResource::class, $request);
+        $data = json_decode($result->toResponse($request)->getContent(), true);
+
+        $slugs = array_column(array_column($data['data'], 'attributes'), 'slug');
+        $this->assertSame(['a', 'b', 'c'], $slugs);
     }
 
-    public function getModel(): string
+    // --- Test 7: AdditionalSort (ScopeSort) + attribute filter ---
+
+    #[Test]
+    public function it_sorts_by_scope_sort_with_attribute_filter(): void
     {
-        return Post::class;
+        $post1 = Post::create(['title' => 'Post A', 'slug' => 'a', 'published' => true]);
+        Comment::create(['post_id' => $post1->id, 'author' => 'X', 'body' => 'x', 'created_at' => '2024-06-01']);
+
+        $post2 = Post::create(['title' => 'Post B', 'slug' => 'b', 'published' => true]);
+        Comment::create(['post_id' => $post2->id, 'author' => 'Y', 'body' => 'y', 'created_at' => '2024-01-01']);
+
+        $post3 = Post::create(['title' => 'Post C', 'slug' => 'c', 'published' => false]);
+        Comment::create(['post_id' => $post3->id, 'author' => 'Z', 'body' => 'z', 'created_at' => '2024-12-01']);
+
+        $request = Request::create('/posts', 'GET', [
+            'filter' => ['published' => '1'],
+            'sort' => '-latest-comment',
+        ]);
+
+        $result = Post::query()->jsonApiCollection(PostResource::class, $request);
+        $data = json_decode($result->toResponse($request)->getContent(), true);
+
+        $this->assertCount(2, $data['data']);
+        $this->assertSame('a', $data['data'][0]['attributes']['slug']);
+        $this->assertSame('b', $data['data'][1]['attributes']['slug']);
+    }
+
+    // --- Test 8: includeFilter with dot-notation ---
+
+    #[Test]
+    public function it_applies_include_filter_with_dot_notation(): void
+    {
+        $post = Post::create(['title' => 'Test', 'slug' => 'test']);
+        Comment::create(['post_id' => $post->id, 'author' => 'Alice', 'body' => 'First']);
+        Comment::create(['post_id' => $post->id, 'author' => 'Bob', 'body' => 'Second']);
+
+        $request = Request::create('/posts', 'GET', [
+            'include' => 'comments',
+            'includeFilter' => ['comments.author' => 'Alice'],
+        ]);
+
+        $result = Post::query()->jsonApiCollection(PostResource::class, $request);
+        $loadedPost = $result->collection->first()->resource;
+
+        $this->assertTrue($loadedPost->relationLoaded('comments'));
+        $this->assertCount(1, $loadedPost->comments);
+        $this->assertSame('Alice', $loadedPost->comments->first()->author);
     }
 }

@@ -17,6 +17,7 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Zakobo\JsonApiQuery\Exceptions\JsonApiExceptionRenderer;
+use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Post;
 use Zakobo\JsonApiQuery\Tests\TestCase;
 
 class ErrorResponseTest extends TestCase
@@ -60,6 +61,10 @@ class ErrorResponseTest extends TestCase
 
         $router->get('/test/not-found-http', function () {
             throw new NotFoundHttpException('Route not found.');
+        });
+
+        $router->get('/test/invalid-jsonapi-query', function (Request $request) {
+            return Post::query()->jsonApiCollection($request);
         });
     }
 
@@ -217,5 +222,31 @@ class ErrorResponseTest extends TestCase
 
         $status = $response->json('errors.0.status');
         $this->assertIsString($status);
+    }
+
+    #[Test]
+    public function invalid_json_api_query_returns_json_api_400_with_source_parameter(): void
+    {
+        Post::create(['title' => 'Test', 'slug' => 'test']);
+
+        $response = $this->getJson('/test/invalid-jsonapi-query?filter[computed_score]=10');
+
+        $response->assertStatus(400);
+        $response->assertHeader('Content-Type', self::CONTENT_TYPE);
+        $response->assertJsonPath('errors.0.status', '400');
+        $response->assertJsonPath('errors.0.source.parameter', 'filter[computed_score]');
+    }
+
+    #[Test]
+    public function invalid_include_filter_returns_json_api_400_with_source_parameter(): void
+    {
+        Post::create(['title' => 'Test', 'slug' => 'test']);
+
+        $response = $this->getJson('/test/invalid-jsonapi-query?includeFilter[comments.author]=John');
+
+        $response->assertStatus(400);
+        $response->assertHeader('Content-Type', self::CONTENT_TYPE);
+        $response->assertJsonPath('errors.0.status', '400');
+        $response->assertJsonPath('errors.0.source.parameter', 'includeFilter[comments.author]');
     }
 }

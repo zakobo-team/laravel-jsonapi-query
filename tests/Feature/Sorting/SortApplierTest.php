@@ -12,6 +12,11 @@ use Zakobo\JsonApiQuery\Tests\TestCase;
 
 class SortApplierTest extends TestCase
 {
+    private function sortApplier(): SortApplier
+    {
+        return app(SortApplier::class);
+    }
+
     #[Test]
     public function it_sorts_ascending_by_default(): void
     {
@@ -22,7 +27,7 @@ class SortApplierTest extends TestCase
         $query = Post::query();
         $request = Request::create('/posts', 'GET', ['sort' => 'title']);
 
-        SortApplier::apply($query, ['title', 'slug', 'votes', 'created_at'], $request);
+        $this->sortApplier()->apply($query, ['title', 'slug', 'votes', 'created_at'], $request);
 
         $titles = $query->pluck('title')->all();
 
@@ -39,7 +44,7 @@ class SortApplierTest extends TestCase
         $query = Post::query();
         $request = Request::create('/posts', 'GET', ['sort' => '-title']);
 
-        SortApplier::apply($query, ['title', 'slug', 'votes', 'created_at'], $request);
+        $this->sortApplier()->apply($query, ['title', 'slug', 'votes', 'created_at'], $request);
 
         $titles = $query->pluck('title')->all();
 
@@ -56,7 +61,7 @@ class SortApplierTest extends TestCase
         $query = Post::query();
         $request = Request::create('/posts', 'GET', ['sort' => 'title,-votes']);
 
-        SortApplier::apply($query, ['title', 'slug', 'votes', 'created_at'], $request);
+        $this->sortApplier()->apply($query, ['title', 'slug', 'votes', 'created_at'], $request);
 
         $results = $query->get();
 
@@ -77,7 +82,7 @@ class SortApplierTest extends TestCase
         $query = Post::query();
         $request = Request::create('/posts', 'GET');
 
-        SortApplier::apply($query, ['title', 'slug', 'votes', 'created_at'], $request, '-votes');
+        $this->sortApplier()->apply($query, ['title', 'slug', 'votes', 'created_at'], $request, '-votes');
 
         $votes = $query->pluck('votes')->all();
 
@@ -103,7 +108,7 @@ class SortApplierTest extends TestCase
         $query = Post::query();
         $request = Request::create('/posts', 'GET');
 
-        SortApplier::apply($query, ['title', 'slug', 'votes'], $request, '-created_at');
+        $this->sortApplier()->apply($query, ['title', 'slug', 'votes'], $request, '-created_at');
 
         $titles = $query->pluck('title')->all();
 
@@ -119,7 +124,7 @@ class SortApplierTest extends TestCase
         $query = Post::query();
         $request = Request::create('/posts', 'GET', ['sort' => 'body']);
 
-        SortApplier::apply($query, ['title', 'slug', 'votes'], $request);
+        $this->sortApplier()->apply($query, ['title', 'slug', 'votes'], $request);
 
         $this->assertEmpty($query->getQuery()->orders);
     }
@@ -132,7 +137,7 @@ class SortApplierTest extends TestCase
         $query = Post::query();
         $request = Request::create('/posts', 'GET');
 
-        SortApplier::apply($query, ['title', 'slug', 'votes'], $request);
+        $this->sortApplier()->apply($query, ['title', 'slug', 'votes'], $request);
 
         $this->assertEmpty($query->getQuery()->orders);
     }
@@ -143,7 +148,7 @@ class SortApplierTest extends TestCase
         $query = Post::query();
         $request = Request::create('/posts', 'GET', ['sort' => '']);
 
-        SortApplier::apply($query, ['title', 'slug', 'votes'], $request);
+        $this->sortApplier()->apply($query, ['title', 'slug', 'votes'], $request);
 
         $this->assertEmpty($query->getQuery()->orders);
     }
@@ -154,7 +159,7 @@ class SortApplierTest extends TestCase
         $query = Post::query();
         $request = Request::create('/posts', 'GET', ['sort' => '-']);
 
-        SortApplier::apply($query, ['title', 'slug', 'votes'], $request);
+        $this->sortApplier()->apply($query, ['title', 'slug', 'votes'], $request);
 
         $this->assertEmpty($query->getQuery()->orders);
     }
@@ -168,7 +173,7 @@ class SortApplierTest extends TestCase
         $query = Post::query();
         $request = Request::create('/posts', 'GET', ['sort' => 'created_at']);
 
-        SortApplier::apply($query, ['title', 'created_at'], $request);
+        $this->sortApplier()->apply($query, ['title', 'created_at'], $request);
 
         $orders = $query->getQuery()->orders;
 
@@ -186,7 +191,7 @@ class SortApplierTest extends TestCase
         $query = Post::query();
         $request = Request::create('/posts', 'GET', ['sort' => 'title,-body,votes']);
 
-        SortApplier::apply($query, ['title', 'votes'], $request);
+        $this->sortApplier()->apply($query, ['title', 'votes'], $request);
 
         $orders = $query->getQuery()->orders;
 

@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Zakobo\JsonApiQuery\Tests\Fixtures\Models;
 
+use Illuminate\Database\Eloquent\Attributes\UseResource;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\TagResource;
 
+#[UseResource(TagResource::class)]
 class Tag extends Model
 {
     protected $guarded = [];
