@@ -6,51 +6,12 @@ namespace Zakobo\JsonApiQuery;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\JsonApi\JsonApiResource;
+use Zakobo\JsonApiQuery\QueryConfig\HasJsonApiQueryConfiguration;
+use Zakobo\JsonApiQuery\QueryConfig\ProvidesJsonApiQueryConfiguration;
 
-abstract class JsonApiQueryResource extends JsonApiResource
+abstract class JsonApiQueryResource extends JsonApiResource implements ProvidesJsonApiQueryConfiguration
 {
-    /**
-     * Attributes excluded from auto-generated filters.
-     *
-     * @var array<int, string>
-     */
-    public array $excludedFromFilter = [];
-
-    /**
-     * Attributes excluded from auto-generated sorting.
-     *
-     * @var array<int, string>
-     */
-    public array $excludedFromSorting = [];
-
-    /**
-     * Additional filters beyond auto-generated (scopes, soft deletes, custom).
-     *
-     * @var array<string, class-string>
-     */
-    public array $additionalFilters = [];
-
-    /**
-     * Default sort when no ?sort= parameter is provided.
-     */
-    public ?string $defaultSort = null;
-
-    /**
-     * Default page size (per-resource override of global config).
-     */
-    public ?int $defaultPageSize = null;
-
-    /**
-     * Maximum page size (per-resource override of global config).
-     */
-    public ?int $maxPageSize = null;
-
-    /**
-     * Additional sorts beyond auto-generated (scopes, custom).
-     *
-     * @var array<string, class-string>
-     */
-    public array $additionalSorts = [];
+    use HasJsonApiQueryConfiguration;
 
     /**
      * Create an instance solely for reading query configuration.

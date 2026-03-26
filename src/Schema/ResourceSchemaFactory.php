@@ -17,7 +17,7 @@ use JsonSerializable;
 use LogicException;
 use Zakobo\JsonApiQuery\Filters\OnlyTrashed;
 use Zakobo\JsonApiQuery\Filters\WithTrashed;
-use Zakobo\JsonApiQuery\JsonApiQueryResource;
+use Zakobo\JsonApiQuery\QueryConfig\ProvidesJsonApiQueryConfiguration;
 
 class ResourceSchemaFactory
 {
@@ -56,7 +56,9 @@ class ResourceSchemaFactory
         $attributes = $this->normalizeAttributes($resource->toAttributes($jsonApiRequest), $model);
         $relationships = $this->normalizeRelationships($resource->toRelationships($jsonApiRequest), $model);
 
-        $queryResource = $resource instanceof JsonApiQueryResource ? $resource : null;
+        $queryConfiguration = $resource instanceof ProvidesJsonApiQueryConfiguration
+            ? $resource->jsonApiQueryConfiguration()
+            : [];
 
         return $this->cache[$cacheKey] = new ResourceSchema(
             resourceClass: $resourceClass,
@@ -65,14 +67,14 @@ class ResourceSchemaFactory
             relationships: $relationships,
             additionalFilters: array_replace(
                 $this->conventionalAdditionalFilters($model),
-                $queryResource?->additionalFilters ?? [],
+                $queryConfiguration['additional_filters'] ?? [],
             ),
-            additionalSorts: $queryResource?->additionalSorts ?? [],
-            excludedFromFilter: $queryResource?->excludedFromFilter ?? [],
-            excludedFromSorting: $queryResource?->excludedFromSorting ?? [],
-            defaultSort: $queryResource?->defaultSort,
-            defaultPageSize: $queryResource?->defaultPageSize,
-            maxPageSize: $queryResource?->maxPageSize,
+            additionalSorts: $queryConfiguration['additional_sorts'] ?? [],
+            excludedFromFilter: $queryConfiguration['excluded_from_filter'] ?? [],
+            excludedFromSorting: $queryConfiguration['excluded_from_sorting'] ?? [],
+            defaultSort: $queryConfiguration['default_sort'] ?? null,
+            defaultPageSize: $queryConfiguration['default_page_size'] ?? null,
+            maxPageSize: $queryConfiguration['max_page_size'] ?? null,
         );
     }
 
