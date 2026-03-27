@@ -16,6 +16,7 @@ class SortApplier
     /**
      * @param  array<string>  $allowedSortFields
      * @param  array<string>  $allowedRelationshipSortFields
+     * @param  array<string, string>  $relationshipMethodMap
      * @param  array<Sort>  $additionalSorts
      */
     public function apply(
@@ -24,6 +25,7 @@ class SortApplier
         Request $request,
         ?string $defaultSort = null,
         array $allowedRelationshipSortFields = [],
+        array $relationshipMethodMap = [],
         array $additionalSorts = [],
     ): void {
         $sortParam = $request->query('sort');
@@ -58,7 +60,7 @@ class SortApplier
             }
 
             if (str_contains($field, '.')) {
-                $this->applyRelationshipSort($query, $field, $direction, $allowedRelationshipSortFields, $usesDefaultSort);
+                $this->applyRelationshipSort($query, $field, $direction, $allowedRelationshipSortFields, $relationshipMethodMap, $usesDefaultSort);
 
                 continue;
             }
@@ -82,12 +84,14 @@ class SortApplier
 
     /**
      * @param  array<string>  $allowedRelationshipSortFields
+     * @param  array<string, string>  $relationshipMethodMap
      */
     protected function applyRelationshipSort(
         Builder $query,
         string $field,
         string $direction,
         array $allowedRelationshipSortFields,
+        array $relationshipMethodMap,
         bool $usesDefaultSort,
     ): void {
         if (! $usesDefaultSort && ! in_array($field, $allowedRelationshipSortFields, true)) {
@@ -102,13 +106,15 @@ class SortApplier
 
         [$relationshipName, $column] = $parts;
 
+        $relationshipMethodName = $relationshipMethodMap[$relationshipName] ?? $relationshipName;
+
         $model = $query->getModel();
 
-        if (! method_exists($model, $relationshipName)) {
+        if (! method_exists($model, $relationshipMethodName)) {
             return;
         }
 
-        $relation = Relation::noConstraints(fn () => $model->{$relationshipName}());
+        $relation = Relation::noConstraints(fn () => $model->{$relationshipMethodName}());
 
         if ($relation instanceof BelongsTo) {
             $subquery = clone $relation->getQuery();

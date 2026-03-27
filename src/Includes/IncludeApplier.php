@@ -85,13 +85,15 @@ class IncludeApplier
             $nestedLoads = $this->buildEagerLoads($relatedSchema, $request, $children, $filtersByPath, $path);
             $filters = $filtersByPath[$path] ?? [];
 
+            $relationMethodName = $relationship->relationMethodName;
+
             if ($nestedLoads === [] && $filters === []) {
-                $loads[] = $relationshipName;
+                $loads[] = $relationMethodName;
 
                 continue;
             }
 
-            $loads[$relationshipName] = function (Builder|Relation $relationQuery) use ($nestedLoads, $filters) {
+            $loads[$relationMethodName] = function (Builder|Relation $relationQuery) use ($nestedLoads, $filters) {
                 if ($filters !== []) {
                     $this->applyConstraintsToRelationshipQuery($relationQuery, $filters);
                 }

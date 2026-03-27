@@ -13,6 +13,7 @@ use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Post;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\User;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\ConfigurablePlainPostResource;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\PlainPostResource;
+use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\SnakeCasePostResource;
 use Zakobo\JsonApiQuery\Tests\TestCase;
 
 class NativeJsonApiResourceSupportTest extends TestCase
@@ -110,6 +111,69 @@ class NativeJsonApiResourceSupportTest extends TestCase
         $this->assertSame(
             [$postOne->id, $postTwo->id],
             $results->pluck('id')->sort()->values()->all(),
+        );
+    }
+
+    #[Test]
+    public function plain_resource_can_include_snake_case_relationship_names_that_map_to_camel_case_model_methods(): void
+    {
+        $alice = User::create(['name' => 'Alice', 'email' => 'alice@example.test']);
+        $post = Post::create(['title' => 'Alpha', 'slug' => 'alpha', 'user_id' => $alice->id]);
+
+        $request = Request::create('/posts', 'GET', [
+            'include' => 'author_user',
+        ]);
+
+        $result = Post::query()
+            ->applyJsonApi(SnakeCasePostResource::class, $request)
+            ->firstOrFail();
+
+        $this->assertTrue($result->relationLoaded('authorUser'));
+        $this->assertSame($alice->id, $result->authorUser?->id);
+        $this->assertFalse($result->relationLoaded('author_user'));
+        $this->assertSame($post->id, $result->id);
+    }
+
+    #[Test]
+    public function plain_resource_can_filter_by_snake_case_relationship_names_that_map_to_camel_case_model_methods(): void
+    {
+        $alice = User::create(['name' => 'Alice', 'email' => 'alice@example.test']);
+        $bob = User::create(['name' => 'Bob', 'email' => 'bob@example.test']);
+
+        $alicePost = Post::create(['title' => 'Alpha', 'slug' => 'alpha', 'user_id' => $alice->id]);
+        Post::create(['title' => 'Bravo', 'slug' => 'bravo', 'user_id' => $bob->id]);
+
+        $request = Request::create('/posts', 'GET', [
+            'filter' => ['author_user.name' => 'Alice'],
+        ]);
+
+        $results = Post::query()
+            ->applyJsonApi(SnakeCasePostResource::class, $request)
+            ->get();
+
+        $this->assertSame([$alicePost->id], $results->pluck('id')->all());
+    }
+
+    #[Test]
+    public function plain_resource_can_sort_by_snake_case_relationship_names_that_map_to_camel_case_model_methods(): void
+    {
+        $bob = User::create(['name' => 'Bob', 'email' => 'bob@example.test']);
+        $alice = User::create(['name' => 'Alice', 'email' => 'alice@example.test']);
+
+        $alicePost = Post::create(['title' => 'Alpha', 'slug' => 'alpha', 'user_id' => $alice->id]);
+        $bobPost = Post::create(['title' => 'Bravo', 'slug' => 'bravo', 'user_id' => $bob->id]);
+
+        $request = Request::create('/posts', 'GET', [
+            'sort' => 'author_user.name',
+        ]);
+
+        $results = Post::query()
+            ->applyJsonApi(SnakeCasePostResource::class, $request)
+            ->get();
+
+        $this->assertSame(
+            [$alicePost->id, $bobPost->id],
+            $results->pluck('id')->all(),
         );
     }
 

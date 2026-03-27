@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\JsonApi\JsonApiRequest;
 use Illuminate\Http\Resources\JsonApi\JsonApiResource;
+use Illuminate\Support\Str;
 use JsonSerializable;
 use LogicException;
 use Zakobo\JsonApiQuery\Filters\OnlyTrashed;
@@ -148,11 +149,17 @@ class ResourceSchemaFactory
                 }
             }
 
-            if (! is_string($relationshipName) || ! method_exists($model, $relationshipName)) {
+            if (! is_string($relationshipName)) {
                 continue;
             }
 
-            $relation = Relation::noConstraints(fn () => $model->{$relationshipName}());
+            $relationMethodName = $this->resolveRelationMethodName($model, $relationshipName);
+
+            if ($relationMethodName === null) {
+                continue;
+            }
+
+            $relation = Relation::noConstraints(fn () => $model->{$relationMethodName}());
 
             if (! $relation instanceof Relation) {
                 continue;
@@ -162,6 +169,7 @@ class ResourceSchemaFactory
 
             $normalized[$relationshipName] = new RelationshipSchema(
                 name: $relationshipName,
+                relationMethodName: $relationMethodName,
                 relatedModelClass: $relation->getRelated()::class,
                 resourceClass: $resourceClass,
             );
@@ -193,6 +201,21 @@ class ResourceSchemaFactory
         } catch (\Throwable) {
             return false;
         }
+    }
+
+    protected function resolveRelationMethodName(Model $model, string $relationshipName): ?string
+    {
+        if (method_exists($model, $relationshipName)) {
+            return $relationshipName;
+        }
+
+        $camelCaseName = Str::camel($relationshipName);
+
+        if (method_exists($model, $camelCaseName)) {
+            return $camelCaseName;
+        }
+
+        return null;
     }
 
     /**

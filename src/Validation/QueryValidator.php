@@ -325,11 +325,7 @@ class QueryValidator
 
         $model = $query->getModel();
 
-        if (! method_exists($model, $relationshipName)) {
-            throw new UnsupportedSortFieldException('sort', "Sorting by [{$field}] is not supported.");
-        }
-
-        $relation = Relation::noConstraints(fn () => $model->{$relationshipName}());
+        $relation = Relation::noConstraints(fn () => $model->{$relationship->relationMethodName}());
 
         if (! $relation instanceof BelongsTo && ! $relation instanceof HasOne) {
             throw new UnsupportedSortFieldException('sort', "Sorting by [{$field}] is not supported.");

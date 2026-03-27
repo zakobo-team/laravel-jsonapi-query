@@ -33,6 +33,11 @@ class Post extends Model
         return $this->belongsTo(User::class, 'user_id')->where('name', 'Alice');
     }
 
+    public function authorUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     public function meta(): HasOne
     {
         return $this->hasOne(PostMeta::class);

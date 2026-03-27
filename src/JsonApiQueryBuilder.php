@@ -85,7 +85,9 @@ class JsonApiQueryBuilder
 
         FilterDispatcher::make()
             ->attributes($this->validator->autoFilterableAttributes($schema))
-            ->relationships(array_keys($schema->relationships))
+            ->relationships(collect($schema->relationships)
+                ->mapWithKeys(fn ($relationship, $name) => [$name => $relationship->relationMethodName])
+                ->all())
             ->additionalFilters($additionalFilterInstances)
             ->apply($query, $jsonApiRequest);
 
@@ -97,6 +99,9 @@ class JsonApiQueryBuilder
             $jsonApiRequest,
             $schema->defaultSort,
             $this->validator->relationshipSortableFields($schema, $jsonApiRequest),
+            collect($schema->relationships)
+                ->mapWithKeys(fn ($relationship, $name) => [$name => $relationship->relationMethodName])
+                ->all(),
             $additionalSortInstances,
         );
 

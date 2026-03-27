@@ -15,7 +15,7 @@ class FilterDispatcher
     /** @var array<string> */
     protected array $attributes = [];
 
-    /** @var array<string> */
+    /** @var array<string, string> */
     protected array $relationships = [];
 
     /** @var array<string, Filter> */
@@ -38,10 +38,14 @@ class FilterDispatcher
         return $this;
     }
 
-    /** @param array<string> $relationships */
+    /** @param array<string, string> $relationships */
     public function relationships(array $relationships): static
     {
-        $this->relationships = $relationships;
+        $this->relationships = collect($relationships)
+            ->mapWithKeys(fn (mixed $value, mixed $key) => is_string($key)
+                ? [$key => (string) $value]
+                : [(string) $value => (string) $value])
+            ->all();
 
         return $this;
     }
@@ -89,7 +93,7 @@ class FilterDispatcher
             return;
         }
 
-        if (in_array($key, $this->relationships, true)) {
+        if (array_key_exists($key, $this->relationships)) {
             $this->applyRelationshipFilter($query, $key, $value);
 
             return;
@@ -155,7 +159,7 @@ class FilterDispatcher
         $segments = explode('.', $key, 2);
         $relationship = $segments[0];
 
-        return in_array($relationship, $this->relationships, true);
+        return array_key_exists($relationship, $this->relationships);
     }
 
     /**
@@ -228,13 +232,15 @@ class FilterDispatcher
 
     protected function applyRelationshipFilter(Builder $query, string $key, mixed $value): void
     {
+        $relationship = $this->relationships[$key] ?? $key;
+
         if (is_array($value)) {
-            WhereHas::make($key)->apply($query, $value);
+            WhereHas::make($key, $relationship)->apply($query, $value);
 
             return;
         }
 
-        Has::make($key)->apply($query, $value);
+        Has::make($key, $relationship)->apply($query, $value);
     }
 
     protected function containsOperatorKeys(array $value): bool
