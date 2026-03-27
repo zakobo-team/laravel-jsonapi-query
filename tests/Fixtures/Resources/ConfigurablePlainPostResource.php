@@ -7,6 +7,7 @@ namespace Zakobo\JsonApiQuery\Tests\Fixtures\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\JsonApi\JsonApiResource;
 use Zakobo\JsonApiQuery\Filters\Scope;
+use Zakobo\JsonApiQuery\Filters\WithTrashed;
 use Zakobo\JsonApiQuery\QueryConfig\HasJsonApiQueryConfiguration;
 use Zakobo\JsonApiQuery\QueryConfig\ProvidesJsonApiQueryConfiguration;
 use Zakobo\JsonApiQuery\Sorting\ScopeSort;
@@ -23,6 +24,9 @@ class ConfigurablePlainPostResource extends JsonApiResource implements ProvidesJ
         $this->excludedFromSorting = ['votes'];
         $this->additionalFilters = [
             'popular' => Scope::class,
+            'title' => Scope::class,
+            'user' => Scope::class,
+            'with_trashed' => WithTrashed::class,
         ];
         $this->additionalSorts = [
             'latest-comment' => ScopeSort::class,

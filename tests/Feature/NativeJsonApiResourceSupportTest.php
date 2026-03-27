@@ -10,6 +10,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Zakobo\JsonApiQuery\Exceptions\UnsupportedFilterFieldException;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Comment;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Post;
+use Zakobo\JsonApiQuery\Tests\Fixtures\Models\User;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\ConfigurablePlainPostResource;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\PlainPostResource;
 use Zakobo\JsonApiQuery\Tests\TestCase;
@@ -67,6 +68,49 @@ class NativeJsonApiResourceSupportTest extends TestCase
         $this->expectException(UnsupportedFilterFieldException::class);
 
         Post::query()->applyJsonApi(ConfigurablePlainPostResource::class, $request)->get();
+    }
+
+    #[Test]
+    public function additional_filter_overrides_auto_generated_attribute_filter_with_same_key(): void
+    {
+        Post::create(['title' => 'Alpha', 'slug' => 'alpha']);
+        Post::create(['title' => 'Alpha Plus', 'slug' => 'alpha-plus']);
+        Post::create(['title' => 'Bravo', 'slug' => 'bravo']);
+
+        $request = Request::create('/posts', 'GET', [
+            'filter' => ['title' => 'Alpha'],
+        ]);
+
+        $results = Post::query()
+            ->applyJsonApi(ConfigurablePlainPostResource::class, $request)
+            ->get();
+
+        $this->assertCount(2, $results);
+        $this->assertSame(['Alpha', 'Alpha Plus'], $results->pluck('title')->sort()->values()->all());
+    }
+
+    #[Test]
+    public function additional_filter_overrides_relationship_filter_with_same_key(): void
+    {
+        $userA = User::create(['name' => 'Alice', 'email' => 'alice@example.test']);
+        $userB = User::create(['name' => 'Bob', 'email' => 'bob@example.test']);
+
+        $postOne = Post::create(['title' => 'Alpha', 'slug' => 'alpha', 'user_id' => $userA->id]);
+        $postTwo = Post::create(['title' => 'Bravo', 'slug' => 'bravo', 'user_id' => $userA->id]);
+        Post::create(['title' => 'Charlie', 'slug' => 'charlie', 'user_id' => $userB->id]);
+
+        $request = Request::create('/posts', 'GET', [
+            'filter' => ['user' => (string) $userA->id],
+        ]);
+
+        $results = Post::query()
+            ->applyJsonApi(ConfigurablePlainPostResource::class, $request)
+            ->get();
+
+        $this->assertSame(
+            [$postOne->id, $postTwo->id],
+            $results->pluck('id')->sort()->values()->all(),
+        );
     }
 
     #[Test]

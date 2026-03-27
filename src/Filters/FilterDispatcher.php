@@ -77,6 +77,12 @@ class FilterDispatcher
 
     protected function dispatchFilter(Builder $query, string $key, mixed $value): void
     {
+        if (isset($this->additionalFilters[$key])) {
+            $this->additionalFilters[$key]->apply($query, $value);
+
+            return;
+        }
+
         if (in_array($key, $this->attributes, true)) {
             $this->applyAttributeFilter($query, $key, $value);
 
@@ -85,12 +91,6 @@ class FilterDispatcher
 
         if (in_array($key, $this->relationships, true)) {
             $this->applyRelationshipFilter($query, $key, $value);
-
-            return;
-        }
-
-        if (isset($this->additionalFilters[$key])) {
-            $this->additionalFilters[$key]->apply($query, $value);
 
             return;
         }

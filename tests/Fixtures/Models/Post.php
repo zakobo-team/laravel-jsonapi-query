@@ -68,6 +68,16 @@ class Post extends Model
         $query->where('votes', '>=', 100);
     }
 
+    public function scopeTitle($query, string $title): void
+    {
+        $query->where('title', 'like', "%{$title}%");
+    }
+
+    public function scopeUser($query, int|string $userId): void
+    {
+        $query->where('user_id', $userId);
+    }
+
     public function scopeMinVotes($query, int $minVotes): void
     {
         $query->where('votes', '>=', $minVotes);
