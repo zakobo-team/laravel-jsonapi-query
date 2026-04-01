@@ -12,6 +12,7 @@ use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Comment;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Post;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\User;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\ConfigurablePlainPostResource;
+use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\ConfigurableUserResource;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\PlainPostResource;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\SnakeCasePostResource;
 use Zakobo\JsonApiQuery\Tests\TestCase;
@@ -189,5 +190,25 @@ class NativeJsonApiResourceSupportTest extends TestCase
         $response = Post::query()->jsonApiCollection(ConfigurablePlainPostResource::class, $request);
 
         $this->assertCount(5, $response->resource->items());
+    }
+
+    #[Test]
+    public function configurable_resource_can_use_builtin_where_id_in_as_additional_filter(): void
+    {
+        $matchingUser = User::create(['name' => 'Alice', 'email' => 'alice@example.test']);
+        User::create(['name' => 'Bob', 'email' => 'bob@example.test']);
+
+        $request = Request::create('/users', 'GET', [
+            'filter' => ['id' => (string) $matchingUser->getRouteKey()],
+        ]);
+
+        $results = User::query()
+            ->applyJsonApi(ConfigurableUserResource::class, $request)
+            ->get();
+
+        $this->assertSame(
+            [(string) $matchingUser->getRouteKey()],
+            $results->pluck('id')->map(fn ($id) => (string) $id)->all(),
+        );
     }
 }

@@ -1,5 +1,6 @@
 {
     "name": "zakobo/laravel-jsonapi-query",
+    "version": "0.1.4",
     "description": "JSON:API query parameter handling for Laravel 13",
     "type": "library",
     "license": "MIT",
