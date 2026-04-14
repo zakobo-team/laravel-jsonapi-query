@@ -17,8 +17,7 @@ class IncludeApplier
 
     public function __construct(
         protected readonly ResourceSchemaFactory $resourceSchemas,
-    ) {
-    }
+    ) {}
 
     public function apply(Builder $query, ResourceSchema $schema, JsonApiRequest $request): void
     {
@@ -41,6 +40,7 @@ class IncludeApplier
      */
     protected function buildIncludeTree(array $paths): array
     {
+        /** @var array<string, mixed> $tree */
         $tree = [];
 
         foreach ($paths as $path) {
@@ -48,7 +48,10 @@ class IncludeApplier
             $current = &$tree;
 
             foreach ($segments as $segment) {
-                $current[$segment] ??= [];
+                if (! isset($current[$segment]) || ! is_array($current[$segment])) {
+                    $current[$segment] = [];
+                }
+
                 $current = &$current[$segment];
             }
         }
@@ -157,10 +160,6 @@ class IncludeApplier
         $builder = $query instanceof Relation ? $query->getQuery() : $query;
 
         foreach ($filters as $key => $value) {
-            if (! is_string($key)) {
-                continue;
-            }
-
             if (is_array($value) && $this->containsOperatorKeys($value)) {
                 foreach ($value as $operator => $operatorValue) {
                     if (! in_array($operator, self::OPERATOR_KEYS, true)) {

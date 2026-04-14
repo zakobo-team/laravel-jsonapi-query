@@ -14,8 +14,7 @@ class OnlyTrashed implements Filter
 
     public function __construct(
         protected readonly string $key = 'only-trashed',
-    ) {
-    }
+    ) {}
 
     public function key(): string
     {
@@ -29,7 +28,8 @@ class OnlyTrashed implements Filter
         }
 
         if (filter_var($value, FILTER_VALIDATE_BOOLEAN)) {
-            $query->onlyTrashed();
+            $this->removeSoftDeletingScope($query);
+            $query->whereNotNull($this->deletedAtColumn($query));
         }
     }
 }

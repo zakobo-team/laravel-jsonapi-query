@@ -24,7 +24,7 @@ class ContainerResolvedExtensionsTest extends TestCase
         $request = Request::create('/posts', 'GET', ['filter' => ['title-match' => 'Bravo']]);
 
         $result = Post::query()->jsonApiCollection(PostContainerResolvedExtensionsResource::class, $request);
-        $data = json_decode($result->toResponse($request)->getContent(), true);
+        $data = json_decode($result->response($request)->getContent(), true);
 
         $this->assertCount(1, $data['data']);
         $this->assertSame('Bravo', $data['data'][0]['attributes']['title']);
@@ -40,7 +40,7 @@ class ContainerResolvedExtensionsTest extends TestCase
         $request = Request::create('/posts', 'GET', ['sort' => '-title-length']);
 
         $result = Post::query()->jsonApiCollection(PostContainerResolvedExtensionsResource::class, $request);
-        $data = json_decode($result->toResponse($request)->getContent(), true);
+        $data = json_decode($result->response($request)->getContent(), true);
 
         $titles = array_column(array_column($data['data'], 'attributes'), 'title');
 

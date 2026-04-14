@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Zakobo\JsonApiQuery\Schema;
 
+use Illuminate\Http\Resources\JsonApi\JsonApiResource;
+
 class ResourceSchema
 {
     /**
-     * @param  class-string  $resourceClass
+     * @param  class-string<JsonApiResource>  $resourceClass
      * @param  class-string  $modelClass
      * @param  array<string, AttributeSchema>  $attributes
      * @param  array<string, RelationshipSchema>  $relationships
@@ -26,8 +28,7 @@ class ResourceSchema
         public readonly ?string $defaultSort,
         public readonly ?int $defaultPageSize,
         public readonly ?int $maxPageSize,
-    ) {
-    }
+    ) {}
 
     public function attribute(string $name): ?AttributeSchema
     {

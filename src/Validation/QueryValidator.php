@@ -29,8 +29,7 @@ class QueryValidator
 
     public function __construct(
         protected readonly ResourceSchemaFactory $resourceSchemas,
-    ) {
-    }
+    ) {}
 
     public function validate(Builder $query, ResourceSchema $schema, JsonApiRequest $request): void
     {
@@ -200,9 +199,7 @@ class QueryValidator
 
         while (count($segments) > 1) {
             $relationshipName = array_shift($segments);
-            $relationship = $relationshipName !== null
-                ? $currentSchema->relationship($relationshipName)
-                : null;
+            $relationship = $currentSchema->relationship($relationshipName);
 
             if ($relationship === null || $relationship->resourceClass === null) {
                 throw new UnknownFilterFieldException($parameter, "Unknown relationship path [{$key}].");

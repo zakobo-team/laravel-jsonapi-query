@@ -7,13 +7,15 @@ namespace Zakobo\JsonApiQuery\Filters;
 use Illuminate\Database\Eloquent\Builder;
 use Zakobo\JsonApiQuery\Filters\Contracts\Filter;
 
+/**
+ * @phpstan-consistent-constructor
+ */
 class Has implements Filter
 {
     protected function __construct(
         protected readonly string $key,
         protected readonly ?string $relationship = null,
-    ) {
-    }
+    ) {}
 
     public static function make(string $key, ?string $relationship = null): static
     {

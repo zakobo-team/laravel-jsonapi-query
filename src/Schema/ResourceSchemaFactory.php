@@ -16,6 +16,7 @@ use Illuminate\Http\Resources\JsonApi\JsonApiResource;
 use Illuminate\Support\Str;
 use JsonSerializable;
 use LogicException;
+use Throwable;
 use Zakobo\JsonApiQuery\Filters\OnlyTrashed;
 use Zakobo\JsonApiQuery\Filters\WithTrashed;
 use Zakobo\JsonApiQuery\QueryConfig\ProvidesJsonApiQueryConfiguration;
@@ -96,6 +97,12 @@ class ResourceSchemaFactory
     protected function inferResourceClass(Model $model): string
     {
         $resource = $model->toResource();
+
+        if (! is_subclass_of($resource, JsonApiResource::class)) {
+            $resourceClass = $resource::class;
+
+            throw new LogicException("Resource [{$resourceClass}] must extend ".JsonApiResource::class.'.');
+        }
 
         return $resource::class;
     }
@@ -198,7 +205,7 @@ class ResourceSchemaFactory
             return $model->getConnection()
                 ->getSchemaBuilder()
                 ->hasColumn($model->getTable(), $column);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return false;
         }
     }
@@ -226,6 +233,10 @@ class ResourceSchemaFactory
         try {
             $resource = $model->toResource();
         } catch (LogicException) {
+            return null;
+        }
+
+        if (! is_subclass_of($resource, JsonApiResource::class)) {
             return null;
         }
 

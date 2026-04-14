@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use PHPUnit\Framework\Attributes\Test;
 use Zakobo\JsonApiQuery\Exceptions\UnsupportedFilterFieldException;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Comment;
+use Zakobo\JsonApiQuery\Tests\Fixtures\Models\PlainResourcePost;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Post;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\User;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\ConfigurablePlainPostResource;
@@ -36,7 +37,42 @@ class NativeJsonApiResourceSupportTest extends TestCase
             ->get();
 
         $this->assertCount(1, $results);
-        $this->assertSame('Bravo', $results->first()->title);
+        $this->assertSame(['Bravo'], $results->pluck('title')->all());
+    }
+
+    #[Test]
+    public function apply_json_api_can_infer_a_native_json_api_resource_from_the_model(): void
+    {
+        PlainResourcePost::create(['title' => 'Alpha', 'slug' => 'alpha', 'votes' => 50]);
+        PlainResourcePost::create(['title' => 'Bravo', 'slug' => 'bravo', 'votes' => 200]);
+
+        $request = Request::create('/posts', 'GET', [
+            'filter' => ['votes' => ['gt' => '100']],
+        ]);
+
+        $results = PlainResourcePost::query()
+            ->applyJsonApi($request)
+            ->get();
+
+        $this->assertCount(1, $results);
+        $this->assertSame(['Bravo'], $results->pluck('title')->all());
+    }
+
+    #[Test]
+    public function json_api_collection_can_infer_a_native_json_api_resource_from_the_model(): void
+    {
+        PlainResourcePost::create(['title' => 'Alpha', 'slug' => 'alpha', 'votes' => 50]);
+        PlainResourcePost::create(['title' => 'Bravo', 'slug' => 'bravo', 'votes' => 200]);
+
+        $request = Request::create('/posts', 'GET', [
+            'filter' => ['votes' => ['gt' => '100']],
+        ]);
+
+        $response = PlainResourcePost::query()->jsonApiCollection($request)->response($request);
+        $data = json_decode($response->getContent(), true);
+
+        $this->assertCount(1, $data['data']);
+        $this->assertSame('Bravo', $data['data'][0]['attributes']['title']);
     }
 
     #[Test]
@@ -54,8 +90,7 @@ class NativeJsonApiResourceSupportTest extends TestCase
             ->applyJsonApi(ConfigurablePlainPostResource::class, $request)
             ->get();
 
-        $this->assertSame('New', $results->first()->title);
-        $this->assertSame('Old', $results->last()->title);
+        $this->assertSame(['New', 'Old'], $results->pluck('title')->all());
     }
 
     #[Test]
@@ -130,9 +165,11 @@ class NativeJsonApiResourceSupportTest extends TestCase
             ->firstOrFail();
 
         $this->assertTrue($result->relationLoaded('authorUser'));
-        $this->assertSame($alice->id, $result->authorUser?->id);
+        $author = $result->getRelation('authorUser');
+        $this->assertInstanceOf(User::class, $author);
+        $this->assertSame($alice->getKey(), $author->getKey());
         $this->assertFalse($result->relationLoaded('author_user'));
-        $this->assertSame($post->id, $result->id);
+        $this->assertSame($post->getKey(), $result->getKey());
     }
 
     #[Test]

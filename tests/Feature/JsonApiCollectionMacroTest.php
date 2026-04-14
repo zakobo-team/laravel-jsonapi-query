@@ -25,7 +25,7 @@ class JsonApiCollectionMacroTest extends TestCase
     private function jsonApiData(string $resourceClass, Request $request): array
     {
         $result = Post::query()->jsonApiCollection($resourceClass, $request);
-        $response = $result->toResponse($request);
+        $response = $result->response($request);
 
         return json_decode($response->getContent(), true);
     }
@@ -332,7 +332,7 @@ class JsonApiCollectionMacroTest extends TestCase
             ->where('published', true)
             ->jsonApiCollection(PostResource::class, $request);
 
-        $response = $result->toResponse($request);
+        $response = $result->response($request);
         $data = json_decode($response->getContent(), true);
 
         $this->assertCount(1, $data['data']);

@@ -12,6 +12,12 @@ use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\UserResource;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property int|null $country_id
+ */
 #[UseResource(UserResource::class)]
 class User extends Model
 {

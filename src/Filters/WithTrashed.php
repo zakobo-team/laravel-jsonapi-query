@@ -14,8 +14,7 @@ class WithTrashed implements Filter
 
     public function __construct(
         protected readonly string $key = 'with-trashed',
-    ) {
-    }
+    ) {}
 
     public function key(): string
     {
@@ -29,7 +28,7 @@ class WithTrashed implements Filter
         }
 
         if (filter_var($value, FILTER_VALIDATE_BOOLEAN)) {
-            $query->withTrashed();
+            $this->removeSoftDeletingScope($query);
         }
     }
 }

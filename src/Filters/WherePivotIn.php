@@ -9,6 +9,9 @@ use Zakobo\JsonApiQuery\Filters\Concerns\DeserializesValue;
 use Zakobo\JsonApiQuery\Filters\Concerns\ResolvesArrayValues;
 use Zakobo\JsonApiQuery\Filters\Contracts\PivotFilter;
 
+/**
+ * @phpstan-consistent-constructor
+ */
 class WherePivotIn implements PivotFilter
 {
     use DeserializesValue;
@@ -17,8 +20,7 @@ class WherePivotIn implements PivotFilter
     protected function __construct(
         protected readonly string $key,
         protected readonly ?string $column = null,
-    ) {
-    }
+    ) {}
 
     public static function make(string $key, ?string $column = null): static
     {

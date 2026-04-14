@@ -8,7 +8,11 @@ use Illuminate\Http\Request;
 use Zakobo\JsonApiQuery\Filters\Scope;
 use Zakobo\JsonApiQuery\JsonApiQueryResource;
 use Zakobo\JsonApiQuery\Sorting\ScopeSort;
+use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Post;
 
+/**
+ * @mixin Post
+ */
 class PostResource extends JsonApiQueryResource
 {
     public function toAttributes(Request $request): array

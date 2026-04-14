@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use PHPUnit\Framework\Attributes\Test;
+use Zakobo\JsonApiQuery\Exceptions\UnknownFilterFieldException;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Comment;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Post;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\User;
@@ -42,8 +43,7 @@ class ApplyJsonApiMacroTest extends TestCase
 
         $results = $builder->get();
         $this->assertCount(2, $results);
-        $this->assertSame('Charlie', $results[0]->title);
-        $this->assertSame('Bravo', $results[1]->title);
+        $this->assertSame(['Charlie', 'Bravo'], $results->pluck('title')->all());
     }
 
     // --- Test 2: Can chain ->get() after ---
@@ -60,7 +60,7 @@ class ApplyJsonApiMacroTest extends TestCase
             ->get();
 
         $this->assertCount(1, $results);
-        $this->assertSame('Only Post', $results->first()->title);
+        $this->assertSame(['Only Post'], $results->pluck('title')->all());
     }
 
     // --- Test 3: Can chain ->paginate() after ---
@@ -118,8 +118,7 @@ class ApplyJsonApiMacroTest extends TestCase
             ->applyJsonApi(PostResource::class, $request)
             ->get();
 
-        $this->assertSame('Alice Post', $results->first()->title);
-        $this->assertSame('Bob Post', $results->last()->title);
+        $this->assertSame(['Alice Post', 'Bob Post'], $results->pluck('title')->all());
     }
 
     // --- Test 6: Additional sort (ScopeSort) via macro ---
@@ -139,8 +138,7 @@ class ApplyJsonApiMacroTest extends TestCase
             ->applyJsonApi(PostResource::class, $request)
             ->get();
 
-        $this->assertSame('New', $results->first()->title);
-        $this->assertSame('Old', $results->last()->title);
+        $this->assertSame(['New', 'Old'], $results->pluck('title')->all());
     }
 
     // --- Test 7: Default sort with relationship sort ---
@@ -160,9 +158,7 @@ class ApplyJsonApiMacroTest extends TestCase
             ->applyJsonApi(PostDefaultRelationshipSortResource::class, $request)
             ->get();
 
-        // defaultSort = '-user.name' → desc → Bob first
-        $this->assertSame('Bob Post', $results->first()->title);
-        $this->assertSame('Alice Post', $results->last()->title);
+        $this->assertSame(['Bob Post', 'Alice Post'], $results->pluck('title')->all());
     }
 
     // --- Test 8: Default sort with additional sort (ScopeSort) ---
@@ -182,9 +178,7 @@ class ApplyJsonApiMacroTest extends TestCase
             ->applyJsonApi(PostDefaultScopeSortResource::class, $request)
             ->get();
 
-        // defaultSort = '-latest-comment' → desc → New first
-        $this->assertSame('New', $results->first()->title);
-        $this->assertSame('Old', $results->last()->title);
+        $this->assertSame(['New', 'Old'], $results->pluck('title')->all());
     }
 
     #[Test]
@@ -199,7 +193,7 @@ class ApplyJsonApiMacroTest extends TestCase
             ->get();
 
         $this->assertCount(1, $results);
-        $this->assertSame('Only Post', $results->first()->title);
+        $this->assertSame(['Only Post'], $results->pluck('title')->all());
     }
 
     #[Test]
@@ -236,7 +230,7 @@ class ApplyJsonApiMacroTest extends TestCase
             ->get();
 
         $this->assertCount(1, $results);
-        $this->assertSame('Deleted', $results->first()->title);
+        $this->assertSame(['Deleted'], $results->pluck('title')->all());
     }
 
     #[Test]
@@ -249,7 +243,7 @@ class ApplyJsonApiMacroTest extends TestCase
             'filter' => ['with-trashed' => 'true'],
         ]);
 
-        $this->expectException(\Zakobo\JsonApiQuery\Exceptions\UnknownFilterFieldException::class);
+        $this->expectException(UnknownFilterFieldException::class);
 
         Comment::query()->applyJsonApi(CommentResource::class, $request)->get();
     }

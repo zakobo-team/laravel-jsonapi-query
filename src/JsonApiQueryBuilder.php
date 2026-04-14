@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\JsonApi\JsonApiRequest;
+use Illuminate\Http\Resources\JsonApi\JsonApiResource;
 use Zakobo\JsonApiQuery\Exceptions\InvalidAdditionalFilterClassException;
 use Zakobo\JsonApiQuery\Exceptions\InvalidAdditionalSortClassException;
 use Zakobo\JsonApiQuery\Filters\Contracts\Filter;
@@ -30,11 +31,10 @@ class JsonApiQueryBuilder
         protected readonly SortApplier $sortApplier,
         protected readonly IncludeApplier $includeApplier,
         protected readonly JsonApiPaginator $paginator,
-    ) {
-    }
+    ) {}
 
     /**
-     * @param  class-string<JsonApiQueryResource>|null  $resourceClass
+     * @param  class-string<JsonApiResource>|null  $resourceClass
      */
     public function collection(
         Builder $query,
@@ -56,7 +56,7 @@ class JsonApiQueryBuilder
     }
 
     /**
-     * @param  class-string<JsonApiQueryResource>|null  $resourceClass
+     * @param  class-string<JsonApiResource>|null  $resourceClass
      */
     public function apply(
         Builder $query,
@@ -119,10 +119,6 @@ class JsonApiQueryBuilder
         foreach ($filters as $key => $filterClass) {
             $filter = $this->resolveAdditionalFilter($filterClass, $key);
 
-            if (! $filter instanceof Filter) {
-                throw new InvalidAdditionalFilterClassException("Configured additional filter [{$filterClass}] must implement Filter.");
-            }
-
             $instances[] = $filter;
         }
 
@@ -139,7 +135,13 @@ class JsonApiQueryBuilder
             }
         }
 
-        return $this->container->makeWith($filterClass, ['key' => $key]);
+        $filter = $this->container->makeWith($filterClass, ['key' => $key]);
+
+        if (! $filter instanceof Filter) {
+            throw new InvalidAdditionalFilterClassException("Configured additional filter [{$filterClass}] must implement Filter.");
+        }
+
+        return $filter;
     }
 
     /**

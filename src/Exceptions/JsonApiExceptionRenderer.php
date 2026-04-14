@@ -19,6 +19,18 @@ class JsonApiExceptionRenderer
     private const CONTENT_TYPE = 'application/vnd.api+json';
 
     /**
+     * @param  array<string, mixed>  $data
+     */
+    private static function jsonResponse(array $data, int $status): JsonResponse
+    {
+        return new JsonResponse(
+            data: $data,
+            status: $status,
+            headers: ['Content-Type' => self::CONTENT_TYPE],
+        );
+    }
+
+    /**
      * Return a closure suitable for registering with Laravel's exception handler.
      *
      * Usage in bootstrap/app.php:
@@ -76,15 +88,6 @@ class JsonApiExceptionRenderer
         ];
 
         return self::jsonResponse(['errors' => [$error]], $status);
-    }
-
-    private static function jsonResponse(array $data, int $status): JsonResponse
-    {
-        return new JsonResponse(
-            data: $data,
-            status: $status,
-            headers: ['Content-Type' => self::CONTENT_TYPE],
-        );
     }
 
     /**

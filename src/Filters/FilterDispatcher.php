@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Zakobo\JsonApiQuery\Filters\Contracts\Filter;
 
+/**
+ * @phpstan-consistent-constructor
+ */
 class FilterDispatcher
 {
     protected const OPERATOR_KEYS = ['gt', 'gte', 'lt', 'lte', 'eq'];
@@ -21,9 +24,7 @@ class FilterDispatcher
     /** @var array<string, Filter> */
     protected array $additionalFilters = [];
 
-    protected function __construct()
-    {
-    }
+    protected function __construct() {}
 
     public static function make(): static
     {
@@ -38,13 +39,13 @@ class FilterDispatcher
         return $this;
     }
 
-    /** @param array<string, string> $relationships */
+    /** @param array<int|string, string> $relationships */
     public function relationships(array $relationships): static
     {
         $this->relationships = collect($relationships)
-            ->mapWithKeys(fn (mixed $value, mixed $key) => is_string($key)
-                ? [$key => (string) $value]
-                : [(string) $value => (string) $value])
+            ->mapWithKeys(fn (string $value, int|string $key) => is_string($key)
+                ? [$key => $value]
+                : [$value => $value])
             ->all();
 
         return $this;
@@ -115,10 +116,6 @@ class FilterDispatcher
         $deferredRelationshipFilters = [];
 
         foreach ($filters as $key => $value) {
-            if (! is_string($key)) {
-                continue;
-            }
-
             if ($this->isDottedRelationshipFilter($key)) {
                 [$relationship, $nestedValue] = $this->normalizeDottedRelationshipFilter($key, $value);
 

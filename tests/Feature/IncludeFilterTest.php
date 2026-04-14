@@ -47,7 +47,7 @@ class IncludeFilterTest extends TestCase
         ]);
 
         $result = Post::query()->jsonApiCollection(PostResource::class, $request);
-        $response = $result->toResponse($request);
+        $response = $result->response($request);
         $data = json_decode($response->getContent(), true);
 
         $this->assertCount(1, $data['data']);
@@ -76,7 +76,7 @@ class IncludeFilterTest extends TestCase
         ]);
 
         $result = Post::query()->jsonApiCollection(PostResource::class, $request);
-        $response = $result->toResponse($request);
+        $response = $result->response($request);
         $data = json_decode($response->getContent(), true);
 
         // Both posts should be returned (primary data is not filtered)
@@ -102,7 +102,7 @@ class IncludeFilterTest extends TestCase
         ]);
 
         $result = Post::query()->jsonApiCollection(PostResource::class, $request);
-        $response = $result->toResponse($request);
+        $response = $result->response($request);
         $data = json_decode($response->getContent(), true);
 
         // Primary data filtered to only 'alpha'
@@ -152,7 +152,7 @@ class IncludeFilterTest extends TestCase
         ]);
 
         $result = Post::query()->jsonApiCollection(PostResource::class, $request);
-        $response = $result->toResponse($request);
+        $response = $result->response($request);
         $data = json_decode($response->getContent(), true);
 
         $loadedPost = $result->collection->first()->resource;
@@ -176,7 +176,7 @@ class IncludeFilterTest extends TestCase
         ]);
 
         $result = Post::query()->jsonApiCollection(PostResource::class, $request);
-        $response = $result->toResponse($request);
+        $response = $result->response($request);
         $data = json_decode($response->getContent(), true);
 
         $this->assertCount(1, $data['data']);

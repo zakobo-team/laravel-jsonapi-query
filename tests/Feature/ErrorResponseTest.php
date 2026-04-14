@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\Test;
+use RuntimeException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -29,7 +30,7 @@ class ErrorResponseTest extends TestCase
     protected function defineRoutes($router): void
     {
         $router->get('/test/model-not-found', function () {
-            throw (new ModelNotFoundException)->setModel('Post', [999]);
+            throw (new ModelNotFoundException)->setModel(Post::class, [999]);
         });
 
         $router->get('/test/validation', function (Request $request) {
@@ -56,7 +57,7 @@ class ErrorResponseTest extends TestCase
         });
 
         $router->get('/test/generic-exception', function () {
-            throw new \RuntimeException('Something went wrong');
+            throw new RuntimeException('Something went wrong');
         });
 
         $router->get('/test/not-found-http', function () {

@@ -9,6 +9,9 @@ use Zakobo\JsonApiQuery\Filters\Concerns\DeserializesValue;
 use Zakobo\JsonApiQuery\Filters\Concerns\ResolvesArrayValues;
 use Zakobo\JsonApiQuery\Filters\Contracts\Filter;
 
+/**
+ * @phpstan-consistent-constructor
+ */
 class WhereIn implements Filter
 {
     use DeserializesValue;
@@ -17,8 +20,7 @@ class WhereIn implements Filter
     protected function __construct(
         protected readonly string $key,
         protected readonly ?string $column = null,
-    ) {
-    }
+    ) {}
 
     public static function make(string $key, ?string $column = null): static
     {
