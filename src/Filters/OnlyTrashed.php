@@ -28,7 +28,8 @@ class OnlyTrashed implements Filter
         }
 
         if (filter_var($value, FILTER_VALIDATE_BOOLEAN)) {
-            $query->onlyTrashed();
+            $this->removeSoftDeletingScope($query);
+            $query->whereNotNull($this->deletedAtColumn($query));
         }
     }
 }

@@ -9,6 +9,9 @@ use Illuminate\Http\Resources\JsonApi\JsonApiResource;
 use Zakobo\JsonApiQuery\QueryConfig\HasJsonApiQueryConfiguration;
 use Zakobo\JsonApiQuery\QueryConfig\ProvidesJsonApiQueryConfiguration;
 
+/**
+ * @phpstan-consistent-constructor
+ */
 abstract class JsonApiQueryResource extends JsonApiResource implements ProvidesJsonApiQueryConfiguration
 {
     use HasJsonApiQueryConfiguration;

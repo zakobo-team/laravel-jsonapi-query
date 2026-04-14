@@ -118,10 +118,6 @@ class JsonApiQueryBuilder
         foreach ($filters as $key => $filterClass) {
             $filter = $this->resolveAdditionalFilter($filterClass, $key);
 
-            if (! $filter instanceof Filter) {
-                throw new InvalidAdditionalFilterClassException("Configured additional filter [{$filterClass}] must implement Filter.");
-            }
-
             $instances[] = $filter;
         }
 
@@ -138,7 +134,13 @@ class JsonApiQueryBuilder
             }
         }
 
-        return $this->container->makeWith($filterClass, ['key' => $key]);
+        $filter = $this->container->makeWith($filterClass, ['key' => $key]);
+
+        if (! $filter instanceof Filter) {
+            throw new InvalidAdditionalFilterClassException("Configured additional filter [{$filterClass}] must implement Filter.");
+        }
+
+        return $filter;
     }
 
     /**

@@ -35,7 +35,7 @@ class IntegrationTest extends TestCase
         ]);
 
         $result = Post::query()->jsonApiCollection(PostResource::class, $request);
-        $response = $result->toResponse($request);
+        $response = $result->response($request);
         $data = json_decode($response->getContent(), true);
 
         $this->assertCount(2, $data['data']);
@@ -57,7 +57,7 @@ class IntegrationTest extends TestCase
         // Before deletion: both visible
         $requestBefore = Request::create('/posts', 'GET');
         $resultBefore = Post::query()->jsonApiCollection(PostResource::class, $requestBefore);
-        $dataBefore = json_decode($resultBefore->toResponse($requestBefore)->getContent(), true);
+        $dataBefore = json_decode($resultBefore->response($requestBefore)->getContent(), true);
         $this->assertCount(2, $dataBefore['data']);
 
         // Delete the post
@@ -66,14 +66,14 @@ class IntegrationTest extends TestCase
         // After deletion: only survivor visible without with-trashed
         $requestAfter = Request::create('/posts', 'GET');
         $resultAfter = Post::query()->jsonApiCollection(PostResource::class, $requestAfter);
-        $dataAfter = json_decode($resultAfter->toResponse($requestAfter)->getContent(), true);
+        $dataAfter = json_decode($resultAfter->response($requestAfter)->getContent(), true);
         $this->assertCount(1, $dataAfter['data']);
         $this->assertSame('survivor', $dataAfter['data'][0]['attributes']['slug']);
 
         // With with-trashed: both visible again
         $requestTrashed = Request::create('/posts', 'GET', ['filter' => ['with-trashed' => 'true']]);
         $resultTrashed = Post::query()->jsonApiCollection(PostResource::class, $requestTrashed);
-        $dataTrashed = json_decode($resultTrashed->toResponse($requestTrashed)->getContent(), true);
+        $dataTrashed = json_decode($resultTrashed->response($requestTrashed)->getContent(), true);
         $this->assertCount(2, $dataTrashed['data']);
     }
 
@@ -98,7 +98,7 @@ class IntegrationTest extends TestCase
         ]);
 
         $result = Post::query()->jsonApiCollection(PostResource::class, $request);
-        $data = json_decode($result->toResponse($request)->getContent(), true);
+        $data = json_decode($result->response($request)->getContent(), true);
 
         $this->assertCount(1, $data['data']);
         $this->assertSame('post-one', $data['data'][0]['attributes']['slug']);
@@ -119,7 +119,7 @@ class IntegrationTest extends TestCase
         ]);
 
         $result = Post::query()->jsonApiCollection(PostResource::class, $request);
-        $data = json_decode($result->toResponse($request)->getContent(), true);
+        $data = json_decode($result->response($request)->getContent(), true);
 
         $this->assertCount(1, $data['data']);
         $this->assertSame('true-positive', $data['data'][0]['attributes']['slug']);
@@ -137,7 +137,7 @@ class IntegrationTest extends TestCase
         ]);
 
         $result = Post::query()->jsonApiCollection(PostResource::class, $request);
-        $data = json_decode($result->toResponse($request)->getContent(), true);
+        $data = json_decode($result->response($request)->getContent(), true);
 
         $this->assertSame([], $data['data']);
         $this->assertArrayHasKey('meta', $data);
@@ -171,7 +171,7 @@ class IntegrationTest extends TestCase
         ]);
 
         $result = Post::query()->jsonApiCollection(PostResource::class, $request);
-        $data = json_decode($result->toResponse($request)->getContent(), true);
+        $data = json_decode($result->response($request)->getContent(), true);
 
         $this->assertCount(2, $data['data']);
         $this->assertSame('alice', $data['data'][0]['attributes']['slug']);
@@ -194,7 +194,7 @@ class IntegrationTest extends TestCase
         $request = Request::create('/posts', 'GET', ['sort' => 'user.name,title']);
 
         $result = Post::query()->jsonApiCollection(PostResource::class, $request);
-        $data = json_decode($result->toResponse($request)->getContent(), true);
+        $data = json_decode($result->response($request)->getContent(), true);
 
         $slugs = array_column(array_column($data['data'], 'attributes'), 'slug');
         $this->assertSame(['a', 'b', 'c'], $slugs);
@@ -220,7 +220,7 @@ class IntegrationTest extends TestCase
         ]);
 
         $result = Post::query()->jsonApiCollection(PostResource::class, $request);
-        $data = json_decode($result->toResponse($request)->getContent(), true);
+        $data = json_decode($result->response($request)->getContent(), true);
 
         $this->assertCount(2, $data['data']);
         $this->assertSame('a', $data['data'][0]['attributes']['slug']);

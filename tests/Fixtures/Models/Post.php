@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Zakobo\JsonApiQuery\Tests\Fixtures\Models;
 
 use Illuminate\Database\Eloquent\Attributes\UseResource;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -14,8 +15,20 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\PostResource;
 
+/**
+ * @property int $id
+ * @property string $title
+ * @property string $slug
+ * @property int $votes
+ * @property bool $published
+ * @property int|null $user_id
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ */
 #[UseResource(PostResource::class)]
 class Post extends Model
 {
@@ -68,27 +81,27 @@ class Post extends Model
         return $this->morphMany(Activity::class, 'loggable');
     }
 
-    public function scopePopular($query): void
+    public function scopePopular(Builder $query): void
     {
         $query->where('votes', '>=', 100);
     }
 
-    public function scopeTitle($query, string $title): void
+    public function scopeTitle(Builder $query, string $title): void
     {
         $query->where('title', 'like', "%{$title}%");
     }
 
-    public function scopeUser($query, int|string $userId): void
+    public function scopeUser(Builder $query, int|string $userId): void
     {
         $query->where('user_id', $userId);
     }
 
-    public function scopeMinVotes($query, int $minVotes): void
+    public function scopeMinVotes(Builder $query, int $minVotes): void
     {
         $query->where('votes', '>=', $minVotes);
     }
 
-    public function scopeOrderByLatestComment($query, string $direction): void
+    public function scopeOrderByLatestComment(Builder $query, string $direction): void
     {
         $query->orderBy(
             Comment::select('created_at')

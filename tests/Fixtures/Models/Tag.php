@@ -10,6 +10,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\TagResource;
 
+/**
+ * @property int $id
+ * @property string $name
+ */
 #[UseResource(TagResource::class)]
 class Tag extends Model
 {

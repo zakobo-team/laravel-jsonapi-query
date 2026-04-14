@@ -98,6 +98,12 @@ class ResourceSchemaFactory
     {
         $resource = $model->toResource();
 
+        if (! is_subclass_of($resource, JsonApiResource::class)) {
+            $resourceClass = $resource::class;
+
+            throw new LogicException("Resource [{$resourceClass}] must extend ".JsonApiResource::class.'.');
+        }
+
         return $resource::class;
     }
 
@@ -227,6 +233,10 @@ class ResourceSchemaFactory
         try {
             $resource = $model->toResource();
         } catch (LogicException) {
+            return null;
+        }
+
+        if (! is_subclass_of($resource, JsonApiResource::class)) {
             return null;
         }
 

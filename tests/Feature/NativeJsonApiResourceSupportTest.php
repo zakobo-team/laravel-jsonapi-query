@@ -36,7 +36,7 @@ class NativeJsonApiResourceSupportTest extends TestCase
             ->get();
 
         $this->assertCount(1, $results);
-        $this->assertSame('Bravo', $results->first()->title);
+        $this->assertSame(['Bravo'], $results->pluck('title')->all());
     }
 
     #[Test]
@@ -54,8 +54,7 @@ class NativeJsonApiResourceSupportTest extends TestCase
             ->applyJsonApi(ConfigurablePlainPostResource::class, $request)
             ->get();
 
-        $this->assertSame('New', $results->first()->title);
-        $this->assertSame('Old', $results->last()->title);
+        $this->assertSame(['New', 'Old'], $results->pluck('title')->all());
     }
 
     #[Test]
@@ -130,9 +129,11 @@ class NativeJsonApiResourceSupportTest extends TestCase
             ->firstOrFail();
 
         $this->assertTrue($result->relationLoaded('authorUser'));
-        $this->assertSame($alice->id, $result->authorUser?->id);
+        $author = $result->getRelation('authorUser');
+        $this->assertInstanceOf(User::class, $author);
+        $this->assertSame($alice->getKey(), $author->getKey());
         $this->assertFalse($result->relationLoaded('author_user'));
-        $this->assertSame($post->id, $result->id);
+        $this->assertSame($post->getKey(), $result->getKey());
     }
 
     #[Test]

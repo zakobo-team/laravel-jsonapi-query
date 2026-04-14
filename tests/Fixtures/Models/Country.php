@@ -10,6 +10,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\CountryResource;
 
+/**
+ * @property int $id
+ * @property string $name
+ */
 #[UseResource(CountryResource::class)]
 class Country extends Model
 {

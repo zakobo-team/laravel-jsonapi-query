@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Zakobo\JsonApiQuery\Filters\Concerns\DeserializesValue;
 use Zakobo\JsonApiQuery\Filters\Contracts\PivotFilter;
 
+/**
+ * @phpstan-consistent-constructor
+ */
 class WherePivot implements PivotFilter
 {
     use DeserializesValue;

@@ -34,7 +34,7 @@ class WherePivotTest extends TestCase
         $results = $relation->get();
 
         $this->assertCount(1, $results);
-        $this->assertSame('Approved Tag', $results->first()->name);
+        $this->assertSame(['Approved Tag'], $results->pluck('name')->all());
     }
 
     #[Test]
@@ -76,7 +76,7 @@ class WherePivotTest extends TestCase
         $results = $relation->get();
 
         $this->assertCount(1, $results);
-        $this->assertSame('Tag 2', $results->first()->name);
+        $this->assertSame(['Tag 2'], $results->pluck('name')->all());
     }
 
     #[Test]
@@ -123,6 +123,6 @@ class WherePivotTest extends TestCase
         $results = $relation->get();
 
         $this->assertCount(1, $results);
-        $this->assertSame('Approved', $results->first()->name);
+        $this->assertSame(['Approved'], $results->pluck('name')->all());
     }
 }

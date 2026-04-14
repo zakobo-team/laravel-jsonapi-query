@@ -9,6 +9,9 @@ use Zakobo\JsonApiQuery\Filters\Concerns\DeserializesValue;
 use Zakobo\JsonApiQuery\Filters\Concerns\ResolvesArrayValues;
 use Zakobo\JsonApiQuery\Filters\Contracts\PivotFilter;
 
+/**
+ * @phpstan-consistent-constructor
+ */
 class WherePivotIn implements PivotFilter
 {
     use DeserializesValue;

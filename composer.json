@@ -12,6 +12,7 @@
         "illuminate/support": "^13.0"
     },
     "require-dev": {
+        "larastan/larastan": "^3.0",
         "orchestra/testbench": "^11.0",
         "phpunit/phpunit": "^11.0",
         "laravel/pint": "^1.29"
@@ -29,6 +30,9 @@
     "scripts": {
         "test": [
             "./vendor/bin/phpunit"
+        ],
+        "analyse": [
+            "./vendor/bin/phpstan analyse --memory-limit=2G"
         ],
         "lint": [
             "./vendor/bin/pint --parallel"

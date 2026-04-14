@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Zakobo\JsonApiQuery\Filters\Contracts\Filter;
 
+/**
+ * @phpstan-consistent-constructor
+ */
 class WhereHas implements Filter
 {
     protected const OPERATOR_KEYS = ['gt', 'gte', 'lt', 'lte', 'eq'];

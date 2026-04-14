@@ -30,7 +30,7 @@ class ErrorResponseTest extends TestCase
     protected function defineRoutes($router): void
     {
         $router->get('/test/model-not-found', function () {
-            throw (new ModelNotFoundException)->setModel('Post', [999]);
+            throw (new ModelNotFoundException)->setModel(Post::class, [999]);
         });
 
         $router->get('/test/validation', function (Request $request) {
