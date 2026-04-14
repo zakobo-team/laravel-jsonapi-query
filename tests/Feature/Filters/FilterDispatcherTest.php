@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use PHPUnit\Framework\Attributes\Test;
 use Zakobo\JsonApiQuery\Filters\FilterDispatcher;
 use Zakobo\JsonApiQuery\Filters\WithTrashed;
+use Zakobo\JsonApiQuery\Tests\Fixtures\Filters\TestFilterDispatcher;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Comment;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Country;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Post;
@@ -18,6 +19,14 @@ use Zakobo\JsonApiQuery\Tests\TestCase;
 class FilterDispatcherTest extends TestCase
 {
     use RefreshDatabase;
+
+    #[Test]
+    public function make_preserves_late_static_binding_for_subclasses(): void
+    {
+        $dispatcher = TestFilterDispatcher::make();
+
+        $this->assertInstanceOf(TestFilterDispatcher::class, $dispatcher);
+    }
 
     // =========================================================================
     // Attribute filters

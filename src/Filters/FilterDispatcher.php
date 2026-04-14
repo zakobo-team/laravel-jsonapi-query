@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Zakobo\JsonApiQuery\Filters\Contracts\Filter;
 
+/**
+ * @phpstan-consistent-constructor
+ */
 class FilterDispatcher
 {
     protected const OPERATOR_KEYS = ['gt', 'gte', 'lt', 'lte', 'eq'];
@@ -23,9 +26,9 @@ class FilterDispatcher
 
     protected function __construct() {}
 
-    public static function make(): self
+    public static function make(): static
     {
-        return new self;
+        return new static;
     }
 
     /** @param array<string> $attributes */

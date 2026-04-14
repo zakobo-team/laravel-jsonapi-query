@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\JsonApi\JsonApiRequest;
+use Illuminate\Http\Resources\JsonApi\JsonApiResource;
 use Zakobo\JsonApiQuery\Exceptions\InvalidAdditionalFilterClassException;
 use Zakobo\JsonApiQuery\Exceptions\InvalidAdditionalSortClassException;
 use Zakobo\JsonApiQuery\Filters\Contracts\Filter;
@@ -33,7 +34,7 @@ class JsonApiQueryBuilder
     ) {}
 
     /**
-     * @param  class-string<JsonApiQueryResource>|null  $resourceClass
+     * @param  class-string<JsonApiResource>|null  $resourceClass
      */
     public function collection(
         Builder $query,
@@ -55,7 +56,7 @@ class JsonApiQueryBuilder
     }
 
     /**
-     * @param  class-string<JsonApiQueryResource>|null  $resourceClass
+     * @param  class-string<JsonApiResource>|null  $resourceClass
      */
     public function apply(
         Builder $query,

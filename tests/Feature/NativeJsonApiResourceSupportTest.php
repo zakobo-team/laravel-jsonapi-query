@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use PHPUnit\Framework\Attributes\Test;
 use Zakobo\JsonApiQuery\Exceptions\UnsupportedFilterFieldException;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Comment;
+use Zakobo\JsonApiQuery\Tests\Fixtures\Models\PlainResourcePost;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Post;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\User;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\ConfigurablePlainPostResource;
@@ -37,6 +38,41 @@ class NativeJsonApiResourceSupportTest extends TestCase
 
         $this->assertCount(1, $results);
         $this->assertSame(['Bravo'], $results->pluck('title')->all());
+    }
+
+    #[Test]
+    public function apply_json_api_can_infer_a_native_json_api_resource_from_the_model(): void
+    {
+        PlainResourcePost::create(['title' => 'Alpha', 'slug' => 'alpha', 'votes' => 50]);
+        PlainResourcePost::create(['title' => 'Bravo', 'slug' => 'bravo', 'votes' => 200]);
+
+        $request = Request::create('/posts', 'GET', [
+            'filter' => ['votes' => ['gt' => '100']],
+        ]);
+
+        $results = PlainResourcePost::query()
+            ->applyJsonApi($request)
+            ->get();
+
+        $this->assertCount(1, $results);
+        $this->assertSame(['Bravo'], $results->pluck('title')->all());
+    }
+
+    #[Test]
+    public function json_api_collection_can_infer_a_native_json_api_resource_from_the_model(): void
+    {
+        PlainResourcePost::create(['title' => 'Alpha', 'slug' => 'alpha', 'votes' => 50]);
+        PlainResourcePost::create(['title' => 'Bravo', 'slug' => 'bravo', 'votes' => 200]);
+
+        $request = Request::create('/posts', 'GET', [
+            'filter' => ['votes' => ['gt' => '100']],
+        ]);
+
+        $response = PlainResourcePost::query()->jsonApiCollection($request)->response($request);
+        $data = json_decode($response->getContent(), true);
+
+        $this->assertCount(1, $data['data']);
+        $this->assertSame('Bravo', $data['data'][0]['attributes']['title']);
     }
 
     #[Test]
