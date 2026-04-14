@@ -10,7 +10,7 @@ class WhereIdIn extends WhereIn
 {
     public function apply(Builder $query, mixed $value): void
     {
-        $column = $query->getModel()->getQualifiedKeyName();
+        $column = $query->getModel()->qualifyColumn($query->getModel()->getRouteKeyName());
 
         $query->whereIn($column, $this->resolveValues($value));
     }

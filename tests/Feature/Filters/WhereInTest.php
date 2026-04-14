@@ -11,6 +11,7 @@ use Zakobo\JsonApiQuery\Filters\WhereIdNotIn;
 use Zakobo\JsonApiQuery\Filters\WhereIn;
 use Zakobo\JsonApiQuery\Filters\WhereNotIn;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Post;
+use Zakobo\JsonApiQuery\Tests\Fixtures\Models\RouteKeyPost;
 use Zakobo\JsonApiQuery\Tests\TestCase;
 
 class WhereInTest extends TestCase
@@ -102,6 +103,36 @@ class WhereInTest extends TestCase
         $filter = WhereIdNotIn::make('id');
 
         $results = Post::query()->tap(fn ($q) => $filter->apply($q, [$post1->id, $post3->id]))->get();
+
+        $this->assertCount(1, $results);
+        $this->assertSame('second', $results->first()->slug);
+    }
+
+    #[Test]
+    public function it_filters_by_route_key_when_the_model_route_key_is_not_the_primary_key(): void
+    {
+        RouteKeyPost::create(['title' => 'First', 'slug' => 'first']);
+        RouteKeyPost::create(['title' => 'Second', 'slug' => 'second']);
+        RouteKeyPost::create(['title' => 'Third', 'slug' => 'third']);
+
+        $filter = WhereIdIn::make('id');
+
+        $results = RouteKeyPost::query()->tap(fn ($query) => $filter->apply($query, ['first', 'third']))->get();
+
+        $this->assertCount(2, $results);
+        $this->assertEqualsCanonicalizing(['first', 'third'], $results->pluck('slug')->all());
+    }
+
+    #[Test]
+    public function it_excludes_by_route_key_when_the_model_route_key_is_not_the_primary_key(): void
+    {
+        RouteKeyPost::create(['title' => 'First', 'slug' => 'first']);
+        RouteKeyPost::create(['title' => 'Second', 'slug' => 'second']);
+        RouteKeyPost::create(['title' => 'Third', 'slug' => 'third']);
+
+        $filter = WhereIdNotIn::make('id');
+
+        $results = RouteKeyPost::query()->tap(fn ($query) => $filter->apply($query, ['first', 'third']))->get();
 
         $this->assertCount(1, $results);
         $this->assertSame('second', $results->first()->slug);

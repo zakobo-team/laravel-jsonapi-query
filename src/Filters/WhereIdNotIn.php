@@ -10,7 +10,7 @@ class WhereIdNotIn extends WhereIn
 {
     public function apply(Builder $query, mixed $value): void
     {
-        $column = $query->getModel()->getQualifiedKeyName();
+        $column = $query->getModel()->qualifyColumn($query->getModel()->getRouteKeyName());
 
         $query->whereNotIn($column, $this->resolveValues($value));
     }
