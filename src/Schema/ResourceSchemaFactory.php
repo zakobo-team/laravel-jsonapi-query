@@ -16,6 +16,7 @@ use Illuminate\Http\Resources\JsonApi\JsonApiResource;
 use Illuminate\Support\Str;
 use JsonSerializable;
 use LogicException;
+use Throwable;
 use Zakobo\JsonApiQuery\Filters\OnlyTrashed;
 use Zakobo\JsonApiQuery\Filters\WithTrashed;
 use Zakobo\JsonApiQuery\QueryConfig\ProvidesJsonApiQueryConfiguration;
@@ -198,7 +199,7 @@ class ResourceSchemaFactory
             return $model->getConnection()
                 ->getSchemaBuilder()
                 ->hasColumn($model->getTable(), $column);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return false;
         }
     }

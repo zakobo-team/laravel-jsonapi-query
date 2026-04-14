@@ -14,8 +14,7 @@ class WithTrashed implements Filter
 
     public function __construct(
         protected readonly string $key = 'with-trashed',
-    ) {
-    }
+    ) {}
 
     public function key(): string
     {

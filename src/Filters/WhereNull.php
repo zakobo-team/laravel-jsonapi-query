@@ -12,8 +12,7 @@ class WhereNull implements Filter
     protected function __construct(
         protected readonly string $key,
         protected readonly ?string $column = null,
-    ) {
-    }
+    ) {}
 
     public static function make(string $key, ?string $column = null): static
     {

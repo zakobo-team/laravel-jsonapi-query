@@ -21,9 +21,7 @@ class FilterDispatcher
     /** @var array<string, Filter> */
     protected array $additionalFilters = [];
 
-    protected function __construct()
-    {
-    }
+    protected function __construct() {}
 
     public static function make(): static
     {

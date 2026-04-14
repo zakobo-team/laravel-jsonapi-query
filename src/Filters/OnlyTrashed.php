@@ -14,8 +14,7 @@ class OnlyTrashed implements Filter
 
     public function __construct(
         protected readonly string $key = 'only-trashed',
-    ) {
-    }
+    ) {}
 
     public function key(): string
     {

@@ -4,6 +4,4 @@ declare(strict_types=1);
 
 namespace Zakobo\JsonApiQuery\Exceptions;
 
-class UnsupportedIncludeFilterException extends InvalidIncludeFilterParameterException
-{
-}
+class UnsupportedIncludeFilterException extends InvalidIncludeFilterParameterException {}

@@ -15,6 +15,5 @@ class RelationshipSchema
         public readonly string $relationMethodName,
         public readonly string $relatedModelClass,
         public readonly ?string $resourceClass,
-    ) {
-    }
+    ) {}
 }

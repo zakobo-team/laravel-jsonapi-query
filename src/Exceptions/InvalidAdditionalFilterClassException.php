@@ -6,6 +6,4 @@ namespace Zakobo\JsonApiQuery\Exceptions;
 
 use InvalidArgumentException;
 
-class InvalidAdditionalFilterClassException extends InvalidArgumentException
-{
-}
+class InvalidAdditionalFilterClassException extends InvalidArgumentException {}

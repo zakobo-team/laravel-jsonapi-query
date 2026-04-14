@@ -29,8 +29,7 @@ class QueryValidator
 
     public function __construct(
         protected readonly ResourceSchemaFactory $resourceSchemas,
-    ) {
-    }
+    ) {}
 
     public function validate(Builder $query, ResourceSchema $schema, JsonApiRequest $request): void
     {

@@ -16,8 +16,7 @@ class Scope implements Filter
     public function __construct(
         protected readonly string $key,
         protected readonly ?string $scopeName = null,
-    ) {
-    }
+    ) {}
 
     public function key(): string
     {

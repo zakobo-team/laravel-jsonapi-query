@@ -17,8 +17,7 @@ class IncludeApplier
 
     public function __construct(
         protected readonly ResourceSchemaFactory $resourceSchemas,
-    ) {
-    }
+    ) {}
 
     public function apply(Builder $query, ResourceSchema $schema, JsonApiRequest $request): void
     {

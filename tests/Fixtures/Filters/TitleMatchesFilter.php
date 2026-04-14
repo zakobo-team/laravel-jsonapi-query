@@ -11,8 +11,7 @@ class TitleMatchesFilter implements Filter
 {
     public function __construct(
         protected readonly string $key,
-    ) {
-    }
+    ) {}
 
     public function key(): string
     {

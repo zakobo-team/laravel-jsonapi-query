@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\Test;
+use RuntimeException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -56,7 +57,7 @@ class ErrorResponseTest extends TestCase
         });
 
         $router->get('/test/generic-exception', function () {
-            throw new \RuntimeException('Something went wrong');
+            throw new RuntimeException('Something went wrong');
         });
 
         $router->get('/test/not-found-http', function () {

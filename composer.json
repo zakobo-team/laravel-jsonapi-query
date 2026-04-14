@@ -26,6 +26,20 @@
             "Zakobo\\JsonApiQuery\\Tests\\": "tests/"
         }
     },
+    "scripts": {
+        "test": [
+            "./vendor/bin/phpunit"
+        ],
+        "lint": [
+            "./vendor/bin/pint --parallel"
+        ],
+        "lint:check": [
+            "./vendor/bin/pint --test"
+        ],
+        "lint:dirty": [
+            "./vendor/bin/pint --dirty"
+        ]
+    },
     "extra": {
         "laravel": {
             "providers": [

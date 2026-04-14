@@ -30,8 +30,7 @@ class JsonApiQueryBuilder
         protected readonly SortApplier $sortApplier,
         protected readonly IncludeApplier $includeApplier,
         protected readonly JsonApiPaginator $paginator,
-    ) {
-    }
+    ) {}
 
     /**
      * @param  class-string<JsonApiQueryResource>|null  $resourceClass

@@ -103,9 +103,7 @@ class JsonApiQueryResourceTest extends TestCase
     #[Test]
     public function resource_with_null_defaults_returns_null(): void
     {
-        $resource = new class(null) extends JsonApiQueryResource
-        {
-        };
+        $resource = new class(null) extends JsonApiQueryResource {};
 
         $this->assertNull($resource->defaultSort);
         $this->assertNull($resource->defaultPageSize);

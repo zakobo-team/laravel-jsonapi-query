@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use PHPUnit\Framework\Attributes\Test;
+use Zakobo\JsonApiQuery\Exceptions\UnknownFilterFieldException;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Comment;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Post;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\User;
@@ -249,7 +250,7 @@ class ApplyJsonApiMacroTest extends TestCase
             'filter' => ['with-trashed' => 'true'],
         ]);
 
-        $this->expectException(\Zakobo\JsonApiQuery\Exceptions\UnknownFilterFieldException::class);
+        $this->expectException(UnknownFilterFieldException::class);
 
         Comment::query()->applyJsonApi(CommentResource::class, $request)->get();
     }
