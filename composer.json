@@ -5,7 +5,7 @@
     "type": "library",
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.4",
         "illuminate/database": "^13.0",
         "illuminate/http": "^13.0",
         "illuminate/routing": "^13.0",
