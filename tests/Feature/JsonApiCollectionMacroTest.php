@@ -16,6 +16,7 @@ use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Comment;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Models\Post;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\PostConventionalResource;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\PostResource;
+use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\UnpaginatedPostResource;
 use Zakobo\JsonApiQuery\Tests\TestCase;
 
 class JsonApiCollectionMacroTest extends TestCase
@@ -217,6 +218,77 @@ class JsonApiCollectionMacroTest extends TestCase
 
         $this->assertCount(3, $data['data']);
         $this->assertSame('Post 04', $data['data'][0]['attributes']['title']);
+    }
+
+    #[Test]
+    public function it_can_return_an_unpaginated_collection_when_the_resource_allows_it(): void
+    {
+        for ($i = 1; $i <= 20; $i++) {
+            Post::create([
+                'title' => sprintf('Post %02d', $i),
+                'slug' => sprintf('post-%02d', $i),
+            ]);
+        }
+
+        $request = Request::create('/posts', 'GET', [
+            'page' => ['number' => '3', 'size' => '-1'],
+            'sort' => 'slug',
+        ]);
+
+        $data = $this->jsonApiData(UnpaginatedPostResource::class, $request);
+
+        $this->assertCount(20, $data['data']);
+        $this->assertSame('Post 01', $data['data'][0]['attributes']['title']);
+        $this->assertArrayNotHasKey('links', $data);
+        $this->assertArrayNotHasKey('meta', $data);
+    }
+
+    #[Test]
+    public function it_keeps_negative_page_size_paginated_unless_the_resource_allows_unpaginated_results(): void
+    {
+        for ($i = 1; $i <= 20; $i++) {
+            Post::create(['title' => "Post {$i}", 'slug' => "post-{$i}"]);
+        }
+
+        $request = Request::create('/posts', 'GET', ['page' => ['size' => '-1']]);
+
+        $data = $this->jsonApiData(PostResource::class, $request);
+
+        $this->assertCount(15, $data['data']);
+        $this->assertArrayHasKey('links', $data);
+        $this->assertArrayHasKey('meta', $data);
+    }
+
+    #[Test]
+    public function unpaginated_resources_still_respect_normal_page_size_limits(): void
+    {
+        for ($i = 1; $i <= 60; $i++) {
+            Post::create(['title' => "Post {$i}", 'slug' => "post-{$i}"]);
+        }
+
+        $request = Request::create('/posts', 'GET', ['page' => ['size' => '100']]);
+
+        $data = $this->jsonApiData(UnpaginatedPostResource::class, $request);
+
+        $this->assertCount(50, $data['data']);
+        $this->assertArrayHasKey('links', $data);
+        $this->assertArrayHasKey('meta', $data);
+    }
+
+    #[Test]
+    public function unpaginated_resources_require_an_exact_negative_one_page_size(): void
+    {
+        for ($i = 1; $i <= 20; $i++) {
+            Post::create(['title' => "Post {$i}", 'slug' => "post-{$i}"]);
+        }
+
+        $request = Request::create('/posts', 'GET', ['page' => ['size' => '-1foo']]);
+
+        $data = $this->jsonApiData(UnpaginatedPostResource::class, $request);
+
+        $this->assertCount(15, $data['data']);
+        $this->assertArrayHasKey('links', $data);
+        $this->assertArrayHasKey('meta', $data);
     }
 
     // --- Test 10: Per-resource default/max page size ---

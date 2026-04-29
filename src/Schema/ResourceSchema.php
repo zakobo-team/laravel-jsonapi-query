@@ -28,6 +28,7 @@ class ResourceSchema
         public readonly ?string $defaultSort,
         public readonly ?int $defaultPageSize,
         public readonly ?int $maxPageSize,
+        public readonly bool $allowUnpaginated,
     ) {}
 
     public function attribute(string $name): ?AttributeSchema

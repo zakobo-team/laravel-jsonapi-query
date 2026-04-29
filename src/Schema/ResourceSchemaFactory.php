@@ -77,6 +77,7 @@ class ResourceSchemaFactory
             defaultSort: $queryConfiguration['default_sort'] ?? null,
             defaultPageSize: $queryConfiguration['default_page_size'] ?? null,
             maxPageSize: $queryConfiguration['max_page_size'] ?? null,
+            allowUnpaginated: (bool) ($queryConfiguration['allow_unpaginated'] ?? false),
         );
     }
 

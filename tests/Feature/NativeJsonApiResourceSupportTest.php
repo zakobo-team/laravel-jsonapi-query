@@ -16,6 +16,7 @@ use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\ConfigurablePlainPostResource;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\ConfigurableUserResource;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\PlainPostResource;
 use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\SnakeCasePostResource;
+use Zakobo\JsonApiQuery\Tests\Fixtures\Resources\UnpaginatedConfigurablePlainPostResource;
 use Zakobo\JsonApiQuery\Tests\TestCase;
 
 class NativeJsonApiResourceSupportTest extends TestCase
@@ -227,6 +228,26 @@ class NativeJsonApiResourceSupportTest extends TestCase
         $response = Post::query()->jsonApiCollection(ConfigurablePlainPostResource::class, $request);
 
         $this->assertCount(5, $response->resource->items());
+    }
+
+    #[Test]
+    public function configurable_plain_resource_can_allow_unpaginated_collections(): void
+    {
+        for ($i = 1; $i <= 12; $i++) {
+            Post::create(['title' => "Post {$i}", 'slug' => "post-{$i}"]);
+        }
+
+        $request = Request::create('/posts', 'GET', ['page' => ['size' => '-1']]);
+
+        $response = Post::query()
+            ->jsonApiCollection(UnpaginatedConfigurablePlainPostResource::class, $request)
+            ->response($request);
+
+        $data = json_decode($response->getContent(), true);
+
+        $this->assertCount(12, $data['data']);
+        $this->assertArrayNotHasKey('links', $data);
+        $this->assertArrayNotHasKey('meta', $data);
     }
 
     #[Test]
