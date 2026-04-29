@@ -16,7 +16,8 @@ interface ProvidesJsonApiQueryConfiguration
      *   additional_sorts?: array<string, class-string>,
      *   default_sort?: string|null,
      *   default_page_size?: int|null,
-     *   max_page_size?: int|null
+     *   max_page_size?: int|null,
+     *   allow_unpaginated?: bool
      * }
      */
     public function jsonApiQueryConfiguration(): array;

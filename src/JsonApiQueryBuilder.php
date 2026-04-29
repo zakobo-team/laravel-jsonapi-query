@@ -45,6 +45,10 @@ class JsonApiQueryBuilder
 
         $this->applyToQuery($query, $schema, $request);
 
+        if ($schema->allowUnpaginated && $this->wantsUnpaginatedCollection($request)) {
+            return $schema->resourceClass::collection($query->get());
+        }
+
         $defaultPageSize = $schema->defaultPageSize
             ?? (int) config('jsonapi-query.pagination.default_size', 30);
         $maxPageSize = $schema->maxPageSize
@@ -53,6 +57,15 @@ class JsonApiQueryBuilder
         $paginator = $this->paginator->paginate($query, $request, $defaultPageSize, $maxPageSize);
 
         return $schema->resourceClass::collection($paginator);
+    }
+
+    protected function wantsUnpaginatedCollection(Request $request): bool
+    {
+        $pageParams = $request->query('page', []);
+
+        return is_array($pageParams)
+            && isset($pageParams['size'])
+            && (int) $pageParams['size'] === -1;
     }
 
     /**

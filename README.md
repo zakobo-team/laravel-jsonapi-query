@@ -160,6 +160,21 @@ Use it when you want full control over `get()`, `paginate()`, `cursorPaginate()`
 
 Use `jsonApiCollection()` when you want the package to apply JSON:API pagination parameters for you.
 
+Resources can explicitly allow unpaginated collection responses:
+
+```php
+public bool $allowUnpaginated = true;
+```
+
+When enabled, clients may request:
+
+```http
+GET /posts?page[size]=-1
+```
+
+This returns the full filtered, sorted, include-aware collection without paginator `links` or `meta`.
+The option is disabled by default. If a resource does not opt in, negative page sizes continue to use the configured default page size.
+
 ## Filtering
 
 ### Attribute filters
@@ -486,6 +501,7 @@ public array $additionalSorts = [];
 public ?string $defaultSort = null;
 public ?int $defaultPageSize = null;
 public ?int $maxPageSize = null;
+public bool $allowUnpaginated = false;
 ```
 
 If you do not need one of these, leave it out.

@@ -49,6 +49,11 @@ trait HasJsonApiQueryConfiguration
      */
     public ?int $maxPageSize = null;
 
+    /**
+     * Allow ?page[size]=-1 to return the full collection without pagination.
+     */
+    public bool $allowUnpaginated = false;
+
     public function jsonApiQueryConfiguration(): array
     {
         return [
@@ -59,6 +64,7 @@ trait HasJsonApiQueryConfiguration
             'default_sort' => $this->defaultSort,
             'default_page_size' => $this->defaultPageSize,
             'max_page_size' => $this->maxPageSize,
+            'allow_unpaginated' => $this->allowUnpaginated,
         ];
     }
 }
