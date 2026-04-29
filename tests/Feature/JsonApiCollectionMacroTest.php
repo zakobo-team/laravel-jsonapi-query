@@ -275,6 +275,22 @@ class JsonApiCollectionMacroTest extends TestCase
         $this->assertArrayHasKey('meta', $data);
     }
 
+    #[Test]
+    public function unpaginated_resources_require_an_exact_negative_one_page_size(): void
+    {
+        for ($i = 1; $i <= 20; $i++) {
+            Post::create(['title' => "Post {$i}", 'slug' => "post-{$i}"]);
+        }
+
+        $request = Request::create('/posts', 'GET', ['page' => ['size' => '-1foo']]);
+
+        $data = $this->jsonApiData(UnpaginatedPostResource::class, $request);
+
+        $this->assertCount(15, $data['data']);
+        $this->assertArrayHasKey('links', $data);
+        $this->assertArrayHasKey('meta', $data);
+    }
+
     // --- Test 10: Per-resource default/max page size ---
 
     #[Test]

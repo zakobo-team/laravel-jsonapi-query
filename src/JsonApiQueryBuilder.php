@@ -63,9 +63,12 @@ class JsonApiQueryBuilder
     {
         $pageParams = $request->query('page', []);
 
+        $pageSize = is_array($pageParams) && isset($pageParams['size'])
+            ? filter_var($pageParams['size'], FILTER_VALIDATE_INT)
+            : false;
+
         return is_array($pageParams)
-            && isset($pageParams['size'])
-            && (int) $pageParams['size'] === -1;
+            && $pageSize === -1;
     }
 
     /**
