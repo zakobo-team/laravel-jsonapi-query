@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
 use InvalidArgumentException;
+use Zakobo\JsonApiQuery\Documentation\JsonApiQueryDocumentationFactory;
 use Zakobo\JsonApiQuery\Includes\IncludeApplier;
 use Zakobo\JsonApiQuery\Pagination\JsonApiPaginator;
 use Zakobo\JsonApiQuery\Schema\ResourceSchemaFactory;
@@ -22,6 +23,7 @@ class JsonApiQueryServiceProvider extends ServiceProvider
 
         $this->app->singleton(ResourceSchemaFactory::class);
         $this->app->singleton(QueryValidator::class);
+        $this->app->singleton(JsonApiQueryDocumentationFactory::class);
         $this->app->singleton(SortApplier::class);
         $this->app->singleton(IncludeApplier::class);
         $this->app->singleton(JsonApiPaginator::class);
